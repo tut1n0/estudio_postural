@@ -12,6 +12,7 @@
     --ep-ink: #2f3a34;
     --ep-sidebar-bg: #26332c;
     --ep-sidebar-hover: #33443a;
+    --ep-sidebar-w: 265px;
     --bs-primary: #6c9b7f;
 }
 
@@ -45,7 +46,7 @@ body {
 .app-wrapper { display: flex; min-height: 100vh; }
 
 .sidebar {
-    width: 250px;
+    width: var(--ep-sidebar-w);
     background: var(--ep-sidebar-bg);
     color: #cdd6d0;
     display: flex;
@@ -86,7 +87,7 @@ body {
 .user-meta strong { color: #fff; font-size: .85rem; }
 .user-meta small { color: #9fb0a6; font-size: .68rem; }
 
-.content-area { flex: 1; margin-left: 250px; display: flex; flex-direction: column; min-width: 0; }
+.content-area { flex: 1; margin-left: var(--ep-sidebar-w); display: flex; flex-direction: column; min-width: 0; }
 
 .topbar {
     background: #fff; border-bottom: 1px solid #e7e2d9;
