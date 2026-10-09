@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb with context %}
 {% block title %}Turno #{{ turno.id }}{% endblock %}
 {% block content %}
 {{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Turnos', 'turnos.calendario', {}),
@@ -19,6 +19,8 @@
             <input type="hidden" name="estado" value="cancelado">
             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Cancelar turno</button>
         </form>
+        {{ boton_eliminar(url_for('turnos.eliminar', turno_id=turno.id),
+           '¿Eliminar este turno? Si tiene asistencias no se borrará.', 'btn-sm btn-outline-danger', 'bi-trash', 'Eliminar') }}
     </div>
 </div>
 
@@ -39,6 +41,10 @@
                             <td>{{ a.telefono or '—' }}</td>
                             <td>{% if a.asistencia_estado %}{{ estados_badge(a.asistencia_estado) }}{% else %}<span class="text-muted small">Sin marcar</span>{% endif %}</td>
                             <td class="text-end">
+                                {% if a.asistencia_id %}
+                                {{ boton_eliminar(url_for('asistencias.eliminar', asistencia_id=a.asistencia_id),
+                                   '¿Anular la asistencia de ' ~ a.nombre ~ '?', 'btn-sm btn-outline-warning py-0 px-1', 'bi-arrow-counterclockwise', '') }}
+                                {% endif %}
                                 <form method="post" action="{{ url_for('turnos.quitar_alumno', turno_id=turno.id, alumno_id=a.id) }}"
                                       onsubmit="return confirm('¿Quitar a {{ a.nombre }} del horario?');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
