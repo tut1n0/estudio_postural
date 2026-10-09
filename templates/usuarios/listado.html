@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Usuarios', None, {})]) }}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Usuarios del sistema</h1>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('usuarios.nuevo') }}"><i class="bi bi-plus-lg"></i> Nuevo usuario</a>
+</div>
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+            {% for u in usuarios %}
+                <tr>
+                    <td class="fw-semibold">{{ u.apellido }}, {{ u.nombre }}</td>
+                    <td>{{ u.email }}</td>
+                    <td><span class="badge text-bg-{% if u.rol == 'ADMIN' %}dark{% else %}info{% endif %}">{{ u.rol }}</span></td>
+                    <td>{% if u.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% macro estados_badge(estado) %}
+{% set map = {
+    'pagado': 'success', 'pendiente': 'warning', 'vencido': 'danger', 'cancelado': 'secondary',
+    'presente': 'success', 'ausente': 'danger', 'justificado': 'warning',
+    'activa': 'success', 'finalizada': 'secondary', 'cancelada': 'danger',
+    'programado': 'primary', 'confirmado': 'success', 'completado': 'secondary'
+} %}
+<span class="badge text-bg-{{ map.get(estado, 'secondary') }} text-capitalize">{{ estado }}</span>
+{% endmacro %}
+
+{% macro breadcrumb(items) %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small mb-2">
+        {% for etiqueta, endpoint, params in items %}
+            {% if endpoint and not loop.last %}
+            <li class="breadcrumb-item"><a href="{{ url_for(endpoint, **(params or {})) }}">{{ etiqueta }}</a></li>
+            {% else %}
+            <li class="breadcrumb-item active" aria-current="page">{{ etiqueta }}</li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% endmacro %}
+
+{% macro paginacion(resultado, endpoint, params) %}
+{% if resultado.paginas > 1 %}
+<nav class="mt-3">
+    <ul class="pagination pagination-sm justify-content-center mb-0">
+        <li class="page-item {% if resultado.pagina <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for(endpoint, pagina=resultado.pagina-1, **params) }}">&laquo;</a>
+        </li>
+        {% for p in range(1, resultado.paginas + 1) %}
+        <li class="page-item {% if p == resultado.pagina %}active{% endif %}">
+            <a class="page-link" href="{{ url_for(endpoint, pagina=p, **params) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if resultado.pagina >= resultado.paginas %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for(endpoint, pagina=resultado.pagina+1, **params) }}">&raquo;</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro boton_eliminar(accion, mensaje, clase='btn-outline-danger btn-sm', icono='bi-trash', texto='Eliminar') %}
+<form method="post" action="{{ accion }}" class="d-inline"
+      onsubmit="return confirm('{{ mensaje }}');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="{{ clase }}"><i class="bi {{ icono }}"></i> {{ texto }}</button>
+</form>
+{% endmacro %}

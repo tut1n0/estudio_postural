@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}{{ 'Nuevo horario' if modo == 'nuevo' else 'Editar horario' }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Horarios', 'horarios.grilla', {}),
+   ('Nuevo' if modo == 'nuevo' else 'Editar', None, {})]) }}
+<h1 class="h4 mb-3">{{ 'Nuevo horario' if modo == 'nuevo' else 'Editar horario' }}</h1>
+<form method="post" class="card border-0">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Actividad *</label>
+                <select name="actividad_id" class="form-select" required>
+                    <option value="">Seleccionar...</option>
+                    {% for a in actividades %}
+                    <option value="{{ a.id }}" {% if datos.get('actividad_id') == a.id %}selected{% endif %}>{{ a.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Profesor *</label>
+                <select name="profesor_id" class="form-select" required>
+                    <option value="">Seleccionar...</option>
+                    {% for p in profesores %}
+                    <option value="{{ p.id }}" {% if datos.get('profesor_id') == p.id %}selected{% endif %}>{{ p.apellido }}, {{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Día de la semana *</label>
+                <select name="dia_semana" class="form-select" required>
+                    {% for dia in dias %}
+                    <option value="{{ dia }}" {% if datos.get('dia_semana') == dia %}selected{% endif %}>{{ dia_semana_nombre(dia) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hora inicio *</label>
+                <input type="time" class="form-control" name="hora_inicio" required value="{{ datos.get('hora_inicio') or '' }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hora fin *</label>
+                <input type="time" class="form-control" name="hora_fin" required value="{{ datos.get('hora_fin') or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Cupo máximo *</label>
+                <input type="number" class="form-control" name="cupo_maximo" min="1" value="{{ datos.get('cupo_maximo', 8) }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Sala</label>
+                <input type="text" class="form-control" name="sala" value="{{ datos.get('sala') or '' }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="activo" value="1" id="activo"
+                           {% if datos.get('activo', True) %}checked{% endif %}>
+                    <label class="form-check-label" for="activo">Horario activo</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" href="{{ url_for('horarios.grilla') }}"><i class="bi bi-arrow-left"></i> Volver</a>
+        <button class="btn btn-primary"><i class="bi bi-check2"></i> Guardar</button>
+    </div>
+</form>
+{% endblock %}

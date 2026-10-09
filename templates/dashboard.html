@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h1 class="h4 mb-0">Panel general</h1>
+        <p class="text-muted small mb-0">Resumen del {{ hoy_texto() }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('alumnos.nuevo') }}">
+            <i class="bi bi-person-plus"></i> Nuevo alumno
+        </a>
+        <a class="btn btn-outline-primary btn-sm" href="{{ url_for('pagos.nuevo') }}">
+            <i class="bi bi-cash-coin"></i> Registrar pago
+        </a>
+    </div>
+</div>
+
+{# Alertas #}
+{% for a in alertas %}
+<div class="alert alert-{{ a.tipo }} d-flex align-items-center gap-2 py-2" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div class="flex-grow-1"><strong>{{ a.titulo }}.</strong> {{ a.texto }}</div>
+    <a class="btn btn-sm btn-outline-dark" href="{{ url_for(a.url, **a.parametros) }}">Ver</a>
+</div>
+{% endfor %}
+
+{# Métricas #}
+<div class="row g-3 mb-4">
+    {% set tarjetas = [
+        ('bi-people-fill', 'Alumnos activos', metricas.alumnos_activos, 'primary', url_for('alumnos.listado', estado='activos')),
+        ('bi-person-plus-fill', 'Alumnos nuevos (mes)', metricas.alumnos_nuevos_mes, 'info', url_for('alumnos.listado')),
+        ('bi-calendar-event', 'Turnos de hoy', metricas.turnos_hoy, 'success', url_for('turnos.calendario')),
+        ('bi-check2-circle', 'Presentes hoy', metricas.presentes_hoy, 'success', url_for('asistencias.pendientes')),
+        ('bi-cash-stack', 'Pagos del mes', (moneda ~ ' ' ~ metricas.pagos_mes_total)|string, 'primary', url_for('pagos.listado', estado='pagado')),
+        ('bi-hourglass-split', 'Pagos pendientes', (moneda ~ ' ' ~ metricas.pendientes_total)|string, 'warning', url_for('pagos.listado', estado='pendiente')),
+        ('bi-exclamation-octagon', 'Pagos vencidos', (moneda ~ ' ' ~ metricas.vencidos_total)|string, 'danger', url_for('pagos.listado', estado='vencido')),
+        ('bi-journal-bookmark', 'Inscripciones activas', metricas.inscripciones_activas, 'secondary', url_for('horarios.grilla')),
+    ] %}
+    {% for icono, etiqueta, valor, color, enlace in tarjetas %}
+    <div class="col-6 col-lg-3">
+        <a href="{{ enlace }}" class="text-decoration-none">
+            <div class="card stat-card border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="stat-icon text-bg-{{ color }}"><i class="bi {{ icono }}"></i></div>
+                    <div>
+                        <div class="stat-value">{{ valor }}</div>
+                        <div class="stat-label">{{ etiqueta }}</div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row g-3">
+    {# Actividad de hoy #}
+    <div class="col-lg-8">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-calendar-day"></i> Actividad de hoy</span>
+                <a class="small" href="{{ url_for('turnos.calendario') }}">Ver calendario</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Hora</th><th>Actividad</th><th>Profesor</th>
+                            <th class="text-center">Cupo</th><th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for t in actividad_hoy %}
+                        <tr>
+                            <td class="text-nowrap fw-semibold">{{ t.hora_inicio_f }}–{{ t.hora_fin_f }}</td>
+                            <td>{{ t.actividad }}{% if t.sala %}<br><small class="text-muted">{{ t.sala }}</small>{% endif %}</td>
+                            <td>{{ t.profesor }}</td>
+                            <td class="text-center">
+                                <span class="badge {% if t.inscriptos >= t.cupo_maximo %}text-bg-danger{% else %}text-bg-light text-dark{% endif %}">
+                                    {{ t.inscriptos }} / {{ t.cupo_maximo }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('asistencias.tomar', turno_id=t.id) }}"
+                                   class="btn btn-sm btn-outline-primary">Asistencia</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No hay turnos programados para hoy.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {# Próximos turnos #}
+    <div class="col-lg-4">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-clock-history"></i> Próximos turnos
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for t in proximos_turnos %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-semibold">{{ t.actividad }}</span>
+                        <small class="text-muted">{{ t.fecha.strftime('%d/%m') }}</small>
+                    </div>
+                    <small class="text-muted">
+                        {{ t.hora_inicio.strftime('%H:%M') }}–{{ t.hora_fin.strftime('%H:%M') }}
+                        · {{ t.profesor }}{% if t.sala %} · {{ t.sala }}{% endif %}
+                    </small>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted text-center py-4">Sin turnos próximos.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

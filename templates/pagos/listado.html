@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, paginacion, boton_eliminar, breadcrumb %}
+{% block title %}Pagos{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Pagos', None, {})]) }}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h4 mb-0">Pagos</h1>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('pagos.nuevo') }}"><i class="bi bi-plus-lg"></i> Registrar pago</a>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-4"><div class="card border-0"><div class="card-body py-3">
+        <small class="text-muted">Ingresos del mes</small>
+        <div class="h5 mb-0 text-success">{{ formatear_moneda(resumen.mes.total) }}</div>
+        <small class="text-muted">{{ resumen.mes.n }} pago(s)</small>
+    </div></div></div>
+    <div class="col-4"><div class="card border-0"><div class="card-body py-3">
+        <small class="text-muted">Pendientes</small>
+        <div class="h5 mb-0 text-warning">{{ formatear_moneda(resumen.pendientes.total) }}</div>
+        <small class="text-muted">{{ resumen.pendientes.n }} abierto(s)</small>
+    </div></div></div>
+    <div class="col-4"><div class="card border-0"><div class="card-body py-3">
+        <small class="text-muted">Vencidos</small>
+        <div class="h5 mb-0 text-danger">{{ formatear_moneda(resumen.vencidos.total) }}</div>
+        <small class="text-muted">{{ resumen.vencidos.n }} vencido(s)</small>
+    </div></div></div>
+</div>
+
+<div class="card border-0 mb-3">
+    <div class="card-body py-3">
+        <form class="row g-2 align-items-end" method="get">
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">Estado</label>
+                <select name="estado" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for e in ['pagado','pendiente','vencido','cancelado'] %}
+                    <option value="{{ e }}" {% if filtros.estado == e %}selected{% endif %}>{{ e|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">Alumno</label>
+                <select name="alumno" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for a in alumnos %}
+                    <option value="{{ a.id }}" {% if filtros.alumno_id == a.id %}selected{% endif %}>{{ a.apellido }}, {{ a.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">Método</label>
+                <select name="metodo" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for m in metodos %}
+                    <option value="{{ m.id }}" {% if filtros.metodo_id == m.id %}selected{% endif %}>{{ m.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" name="desde" value="{{ filtros.desde or '' }}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" name="hasta" value="{{ filtros.hasta or '' }}">
+            </div>
+            <div class="col-6 col-md-1 d-grid">
+                <button class="btn btn-primary btn-sm"><i class="bi bi-search"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Fecha pago</th><th>Alumno</th><th>Concepto</th><th class="text-end">Monto</th><th>Vencimiento</th><th>Método</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+            <tbody>
+            {% for p in resultado.filas %}
+                <tr>
+                    <td class="text-nowrap">{{ formatear_fecha(p.fecha_pago) }}</td>
+                    <td><a href="{{ url_for('pagos.ficha', alumno_id=p.alumno_id) }}" class="text-decoration-none">{{ p.apellido }}, {{ p.nombre }}</a></td>
+                    <td>{{ p.concepto }}</td>
+                    <td class="text-end fw-semibold">{{ formatear_moneda(p.monto) }}</td>
+                    <td class="text-nowrap">{{ formatear_fecha(p.fecha_vencimiento) }}</td>
+                    <td>{{ p.metodo_pago or '—' }}</td>
+                    <td>{{ estados_badge(p.estado) }}</td>
+                    <td class="text-end text-nowrap">
+                        {% if p.estado != 'pagado' %}
+                        <form method="post" action="{{ url_for('pagos.marcar_pagado', pago_id=p.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button class="btn btn-sm btn-outline-success" title="Marcar como pagado"><i class="bi bi-check2"></i></button>
+                        </form>
+                        {% endif %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('pagos.editar', pago_id=p.id) }}"><i class="bi bi-pencil"></i></a>
+                        {{ boton_eliminar(url_for('pagos.eliminar', pago_id=p.id), '¿Eliminar este pago?', 'btn-outline-danger btn-sm', 'bi-trash', '') }}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No se encontraron pagos.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{{ paginacion(resultado, 'pagos.listado', {'estado': filtros.estado, 'alumno': filtros.alumno_id or '', 'metodo': filtros.metodo_id or '', 'desde': filtros.desde or '', 'hasta': filtros.hasta or ''}) }}
+{% endblock %}

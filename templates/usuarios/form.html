@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}{{ 'Nuevo usuario' if modo == 'nuevo' else 'Editar usuario' }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Usuarios', 'usuarios.listado', {}),
+   ('Nuevo' if modo == 'nuevo' else 'Editar', None, {})]) }}
+<h1 class="h4 mb-3">{{ 'Nuevo usuario' if modo == 'nuevo' else 'Editar usuario' }}</h1>
+<form method="post" class="card border-0">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Nombre *</label>
+                <input type="text" class="form-control" name="nombre" required value="{{ datos.get('nombre', '') }}"></div>
+            <div class="col-md-6"><label class="form-label">Apellido *</label>
+                <input type="text" class="form-control" name="apellido" required value="{{ datos.get('apellido', '') }}"></div>
+            <div class="col-md-6"><label class="form-label">Email *</label>
+                <input type="email" class="form-control" name="email" required value="{{ datos.get('email', '') }}"></div>
+            <div class="col-md-6"><label class="form-label">Rol *</label>
+                <select name="rol" class="form-select">
+                    {% for r in roles %}
+                    <option value="{{ r }}" {% if datos.get('rol') == r %}selected{% endif %}>{{ r }}</option>
+                    {% endfor %}
+                </select></div>
+            <div class="col-md-6"><label class="form-label">Contraseña {% if modo == 'nuevo' %}*{% else %}(dejar vacío para no cambiar){% endif %}</label>
+                <input type="password" class="form-control" name="password" {% if modo == 'nuevo' %}required{% endif %}></div>
+            {% if modo == 'editar' %}
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="activo" value="1" id="activo"
+                           {% if datos.get('activo', True) %}checked{% endif %}>
+                    <label class="form-check-label" for="activo">Usuario activo</label>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="forzar_cambio" value="1" id="forzar_cambio">
+                    <label class="form-check-label" for="forzar_cambio">Obligar a cambiar la contraseña en el próximo ingreso</label>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" href="{{ url_for('usuarios.listado') }}"><i class="bi bi-arrow-left"></i> Volver</a>
+        <button class="btn btn-primary"><i class="bi bi-check2"></i> Guardar</button>
+    </div>
+</form>
+{% endblock %}

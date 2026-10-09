@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}{{ 'Nuevo profesor' if modo == 'nuevo' else 'Editar profesor' }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Profesores', 'profesores.listado', {}),
+   ('Nuevo' if modo == 'nuevo' else 'Editar', None, {})]) }}
+<h1 class="h4 mb-3">{{ 'Nuevo profesor' if modo == 'nuevo' else 'Editar profesor' }}</h1>
+<form method="post" class="card border-0">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Nombre *</label>
+                <input type="text" class="form-control" name="nombre" required value="{{ datos.get('nombre', '') }}"></div>
+            <div class="col-md-6"><label class="form-label">Apellido *</label>
+                <input type="text" class="form-control" name="apellido" required value="{{ datos.get('apellido', '') }}"></div>
+            <div class="col-md-6"><label class="form-label">Teléfono</label>
+                <input type="text" class="form-control" name="telefono" value="{{ datos.get('telefono') or '' }}"></div>
+            <div class="col-md-6"><label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" value="{{ datos.get('email') or '' }}"></div>
+            <div class="col-12"><label class="form-label">Especialidad</label>
+                <input type="text" class="form-control" name="especialidad" placeholder="Pilates, Yoga, Terapia Postural..."
+                       value="{{ datos.get('especialidad') or '' }}"></div>
+            <div class="col-12"><label class="form-label">Observaciones</label>
+                <textarea class="form-control" name="observaciones" rows="3">{{ datos.get('observaciones') or '' }}</textarea></div>
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="activo" value="1" id="activo"
+                           {% if datos.get('activo', True) %}checked{% endif %}>
+                    <label class="form-check-label" for="activo">Profesor activo</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" href="{{ url_for('profesores.listado') }}"><i class="bi bi-arrow-left"></i> Volver</a>
+        <button class="btn btn-primary"><i class="bi bi-check2"></i> Guardar</button>
+    </div>
+</form>
+{% endblock %}

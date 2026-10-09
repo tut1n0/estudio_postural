@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}Asistencias{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Asistencias', None, {})]) }}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h4 mb-0">Asistencias</h1>
+    <form method="get" class="d-flex align-items-end gap-2">
+        <div>
+            <label class="form-label small mb-1">Fecha</label>
+            <input type="date" class="form-control form-control-sm" name="fecha" value="{{ fecha }}">
+        </div>
+        <button class="btn btn-sm btn-primary"><i class="bi bi-search"></i> Ver</button>
+    </form>
+</div>
+
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Hora</th><th>Actividad</th><th>Profesor</th><th class="text-center">Marcadas</th><th class="text-end">Acción</th></tr></thead>
+            <tbody>
+            {% for t in turnos %}
+                <tr>
+                    <td class="text-nowrap fw-semibold">{{ formatear_hora(t.hora_inicio) }}–{{ formatear_hora(t.hora_fin) }}</td>
+                    <td>{{ t.actividad }}{% if t.sala %}<br><small class="text-muted">{{ t.sala }}</small>{% endif %}</td>
+                    <td><small>{{ t.profesor }}</small></td>
+                    <td class="text-center">
+                        <span class="badge {% if t.marcadas >= t.inscriptos and t.inscriptos > 0 %}text-bg-success{% else %}text-bg-warning{% endif %}">
+                            {{ t.marcadas }} / {{ t.inscriptos }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-primary" href="{{ url_for('asistencias.tomar', turno_id=t.id) }}">Tomar asistencia</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No hay turnos para esta fecha.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

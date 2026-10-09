@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% block title %}Turno #{{ turno.id }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Turnos', 'turnos.calendario', {}),
+   ('Turno #' ~ turno.id, None, {})]) }}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+    <div>
+        <h1 class="h4 mb-1">{{ turno.actividad }} {{ estados_badge(turno.estado) }}</h1>
+        <p class="text-muted small mb-0">
+            {{ formatear_fecha(turno.fecha) }} · {{ formatear_hora(turno.hora_inicio) }}–{{ formatear_hora(turno.hora_fin) }}
+            · {{ turno.profesor }}{% if turno.sala %} · {{ turno.sala }}{% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-sm btn-outline-success" href="{{ url_for('asistencias.tomar', turno_id=turno.id) }}"><i class="bi bi-check2-square"></i> Tomar asistencia</a>
+        <form method="post" action="{{ url_for('turnos.cambiar_estado', turno_id=turno.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="estado" value="cancelado">
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Cancelar turno</button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card border-0">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <span class="fw-semibold">Inscriptos ({{ inscriptos|length }} / {{ turno.cupo_maximo }})</span>
+                <span class="text-muted small">{{ disponibles }} cupo(s) libre(s)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Alumno</th><th>Teléfono</th><th>Asistencia</th><th></th></tr></thead>
+                    <tbody>
+                    {% for a in inscriptos %}
+                        <tr>
+                            <td>{{ a.apellido }}, {{ a.nombre }}</td>
+                            <td>{{ a.telefono or '—' }}</td>
+                            <td>{% if a.asistencia_estado %}{{ estados_badge(a.asistencia_estado) }}{% else %}<span class="text-muted small">Sin marcar</span>{% endif %}</td>
+                            <td class="text-end">
+                                <form method="post" action="{{ url_for('turnos.quitar_alumno', turno_id=turno.id, alumno_id=a.id) }}"
+                                      onsubmit="return confirm('¿Quitar a {{ a.nombre }} del horario?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-1"><i class="bi bi-x"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">Sin inscriptos.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0">
+            <div class="card-header bg-white fw-semibold">Agregar alumno</div>
+            <div class="card-body">
+                {% if disponibles > 0 %}
+                <form method="post" action="{{ url_for('turnos.agregar_alumno', turno_id=turno.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <label class="form-label small">Alumno</label>
+                    <select name="alumno_id" class="form-select form-select-sm mb-2" required>
+                        <option value="">Seleccionar...</option>
+                        {% for a in posibles_extra %}
+                        <option value="{{ a.id }}">{{ a.apellido }}, {{ a.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-primary w-100"><i class="bi bi-plus-lg"></i> Agregar al horario</button>
+                </form>
+                {% else %}
+                <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle"></i> Cupo completo. No se pueden agregar más alumnos.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

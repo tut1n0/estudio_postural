@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import boton_eliminar, breadcrumb %}
+{% block title %}Profesores{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Profesores', None, {})]) }}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Profesores</h1>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('profesores.nuevo') }}"><i class="bi bi-plus-lg"></i> Nuevo profesor</a>
+</div>
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Profesor</th><th>Especialidad</th><th>Teléfono</th><th class="text-center">Horarios</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+            <tbody>
+            {% for p in profesores %}
+                <tr>
+                    <td><a href="{{ url_for('profesores.ficha', profesor_id=p.id) }}" class="fw-semibold text-decoration-none">{{ p.apellido }}, {{ p.nombre }}</a></td>
+                    <td>{{ p.especialidad or '—' }}</td>
+                    <td>{{ p.telefono or '—' }}</td>
+                    <td class="text-center"><span class="badge text-bg-light text-dark">{{ p.horarios_count }}</span></td>
+                    <td>{% if p.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('profesores.ficha', profesor_id=p.id) }}">Ver</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('profesores.editar', profesor_id=p.id) }}">Editar</a>
+                        {{ boton_eliminar(url_for('profesores.eliminar', profesor_id=p.id), '¿Eliminar o desactivar este profesor?') }}
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No hay profesores cargados.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

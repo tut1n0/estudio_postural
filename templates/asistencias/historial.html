@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% block title %}Asistencia de {{ alumno.nombre }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Alumnos', 'alumnos.listado', {}),
+   (alumno.nombre ~ ' ' ~ alumno.apellido, 'alumnos.ficha', {'alumno_id': alumno.id}),
+   ('Asistencia', None, {})]) }}
+<h1 class="h4 mb-3">Historial de asistencia — {{ alumno.nombre }} {{ alumno.apellido }}</h1>
+
+<div class="row text-center g-3 mb-3">
+    <div class="col-3"><div class="card border-0"><div class="card-body py-3"><div class="h4 mb-0">{{ estadisticas.total }}</div><small class="text-muted">Total</small></div></div></div>
+    <div class="col-3"><div class="card border-0"><div class="card-body py-3"><div class="h4 mb-0 text-success">{{ estadisticas.presentes }}</div><small class="text-muted">Presentes</small></div></div></div>
+    <div class="col-3"><div class="card border-0"><div class="card-body py-3"><div class="h4 mb-0 text-danger">{{ estadisticas.ausentes }}</div><small class="text-muted">Ausentes</small></div></div></div>
+    <div class="col-3"><div class="card border-0"><div class="card-body py-3"><div class="h4 mb-0 text-warning">{{ estadisticas.porcentaje }}%</div><small class="text-muted">Asistencia</small></div></div></div>
+</div>
+
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Fecha</th><th>Hora</th><th>Actividad</th><th>Estado</th><th>Observaciones</th></tr></thead>
+            <tbody>
+            {% for h in historial %}
+                <tr>
+                    <td>{{ formatear_fecha(h.fecha) }}</td>
+                    <td>{{ formatear_hora(h.hora_inicio) }}</td>
+                    <td>{{ h.actividad }}</td>
+                    <td>{{ estados_badge(h.estado) }}</td>
+                    <td><small>{{ h.observaciones or '—' }}</small></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">Sin registros de asistencia.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

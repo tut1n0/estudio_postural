@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}Reportes{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Reportes', None, {})]) }}
+<h1 class="h4 mb-3">Reportes</h1>
+
+<div class="card border-0 mb-3">
+    <div class="card-body py-3">
+        <form class="row g-2 align-items-end" method="get">
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">Desde</label>
+                <input type="date" class="form-control form-control-sm" name="desde" value="{{ desde.isoformat() }}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1">Hasta</label>
+                <input type="date" class="form-control form-control-sm" name="hasta" value="{{ hasta.isoformat() }}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">Actividad</label>
+                <select name="actividad" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    {% for a in actividades %}
+                    <option value="{{ a.id }}" {% if actividad_id == a.id %}selected{% endif %}>{{ a.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1">Profesor</label>
+                <select name="profesor" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    {% for p in profesores %}
+                    <option value="{{ p.id }}" {% if profesor_id == p.id %}selected{% endif %}>{{ p.apellido }}, {{ p.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-6 col-md-2 d-grid">
+                <button class="btn btn-primary btn-sm"><i class="bi bi-funnel"></i> Aplicar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card border-0"><div class="card-body">
+        <small class="text-muted">Ingresos del período</small>
+        <div class="h5 mb-0 text-success">{{ formatear_moneda(ingresos_periodo.total) }}</div>
+        <small class="text-muted">{{ ingresos_periodo.n }} pago(s)</small></div></div></div>
+    <div class="col-md-3"><div class="card border-0"><div class="card-body">
+        <small class="text-muted">Pagos pendientes</small>
+        <div class="h5 mb-0 text-warning">{{ formatear_moneda(pendientes.total) }}</div>
+        <small class="text-muted">{{ pendientes.n }} abierto(s)</small></div></div></div>
+    <div class="col-md-3"><div class="card border-0"><div class="card-body">
+        <small class="text-muted">Pagos vencidos</small>
+        <div class="h5 mb-0 text-danger">{{ formatear_moneda(vencidos.total) }}</div>
+        <small class="text-muted">{{ vencidos.n }} vencido(s)</small></div></div></div>
+    <div class="col-md-3"><div class="card border-0"><div class="card-body">
+        <small class="text-muted">Alumnos nuevos</small>
+        <div class="h5 mb-0">{{ alumnos_nuevos|sum(attribute='n') }}</div>
+        <small class="text-muted">en el período</small></div></div></div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-6">
+        <div class="card border-0 h-100"><div class="card-body">
+            <h6 class="fw-semibold">Ingresos últimos 6 meses</h6>
+            <canvas id="chartIngresos" height="140"></canvas>
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 h-100"><div class="card-body">
+            <h6 class="fw-semibold">Asistencia por actividad</h6>
+            <canvas id="chartAsistencia" height="140"></canvas>
+        </div></div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card border-0"><div class="card-header bg-white fw-semibold">Ocupación de horarios</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Actividad</th><th>Día/Hora</th><th class="text-center">Inscriptos</th><th>Ocupación</th></tr></thead>
+                    <tbody>
+                    {% for o in ocupacion %}
+                        <tr>
+                            <td>{{ o.actividad }}<br><small class="text-muted">{{ o.profesor }}</small></td>
+                            <td><small>{{ dia_semana_nombre(o.dia_semana) }} {{ formatear_hora(o.hora_inicio) }}</small></td>
+                            <td class="text-center">{{ o.inscriptos }}/{{ o.cupo_maximo }}</td>
+                            <td style="min-width:120px">
+                                <div class="progress" style="height:8px"><div class="progress-bar {% if o.porcentaje >= 100 %}bg-danger{% elif o.porcentaje >= 70 %}bg-warning{% else %}bg-success{% endif %}" style="width: {{ o.porcentaje }}%"></div></div>
+                                <small class="text-muted">{{ o.porcentaje }}%</small>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">Sin datos.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0"><div class="card-header bg-white fw-semibold">Asistencia por alumno (top 15)</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Alumno</th><th class="text-center">Clases</th><th class="text-center">Asistencia</th></tr></thead>
+                    <tbody>
+                    {% for a in asistencia_alumno %}
+                        <tr>
+                            <td>{{ a.alumno }}</td>
+                            <td class="text-center">{{ a.presentes }}/{{ a.total }}</td>
+                            <td class="text-center"><span class="badge {% if a.porcentaje and a.porcentaje >= 70 %}text-bg-success{% elif a.porcentaje and a.porcentaje >= 40 %}text-bg-warning{% else %}text-bg-danger{% endif %}">{{ a.porcentaje or 0 }}%</span></td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3" class="text-muted text-center py-3">Sin datos.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const ingresos = {
+    labels: {{ ingresos_mes|map(attribute='mes')|list|tojson }},
+    data: {{ ingresos_mes|map(attribute='total')|list|tojson }}
+};
+new Chart(document.getElementById('chartIngresos'), {
+    type: 'bar',
+    data: { labels: ingresos.labels, datasets: [{ label: 'Ingresos', data: ingresos.data, backgroundColor: '#6c9b7f', borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+const asist = {
+    labels: {{ asistencia_actividad|map(attribute='actividad')|list|tojson }},
+    presentes: {{ asistencia_actividad|map(attribute='presentes')|list|tojson }},
+    ausentes: {{ asistencia_actividad|map(attribute='ausentes')|list|tojson }},
+    justificados: {{ asistencia_actividad|map(attribute='justificados')|list|tojson }}
+};
+new Chart(document.getElementById('chartAsistencia'), {
+    type: 'bar',
+    data: { labels: asist.labels, datasets: [
+        { label: 'Presentes', data: asist.presentes, backgroundColor: '#6c9b7f' },
+        { label: 'Ausentes', data: asist.ausentes, backgroundColor: '#c98a7d' },
+        { label: 'Justificados', data: asist.justificados, backgroundColor: '#d9b36c' }
+    ]},
+    options: { scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } }
+});
+</script>
+{% endblock %}

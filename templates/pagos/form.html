@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}{{ 'Registrar pago' if modo == 'nuevo' else 'Editar pago' }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Pagos', 'pagos.listado', {}),
+   ('Registrar' if modo == 'nuevo' else 'Editar', None, {})]) }}
+<h1 class="h4 mb-3">{{ 'Registrar pago' if modo == 'nuevo' else 'Editar pago' }}</h1>
+<form method="post" class="card border-0">
+    <div class="card-body">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Alumno *</label>
+                <select name="alumno_id" class="form-select" required>
+                    <option value="">Seleccionar...</option>
+                    {% for a in alumnos %}
+                    <option value="{{ a.id }}" {% if datos.get('alumno_id') == a.id %}selected{% endif %}>{{ a.apellido }}, {{ a.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Concepto *</label>
+                <input type="text" class="form-control" name="concepto" required placeholder="Ej: Pilates mensual 10/2026"
+                       value="{{ datos.get('concepto') or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Monto *</label>
+                <div class="input-group">
+                    <span class="input-group-text">{{ moneda }}</span>
+                    <input type="number" step="0.01" min="0" class="form-control" name="monto" required
+                           value="{{ datos.get('monto') or '' }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha de pago</label>
+                <input type="date" class="form-control" name="fecha_pago" value="{{ datos.get('fecha_pago') or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Fecha de vencimiento</label>
+                <input type="date" class="form-control" name="fecha_vencimiento" value="{{ datos.get('fecha_vencimiento') or '' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Método de pago</label>
+                <select name="metodo_pago_id" class="form-select">
+                    <option value="">Sin especificar</option>
+                    {% for m in metodos %}
+                    <option value="{{ m.id }}" {% if datos.get('metodo_pago_id') == m.id %}selected{% endif %}>{{ m.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Estado *</label>
+                <select name="estado" class="form-select" required>
+                    {% for e in ['pendiente','pagado','vencido','cancelado'] %}
+                    <option value="{{ e }}" {% if datos.get('estado', 'pendiente') == e %}selected{% endif %}>{{ e|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Observaciones</label>
+                <textarea class="form-control" name="observaciones" rows="2">{{ datos.get('observaciones') or '' }}</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between">
+        <a class="btn btn-outline-secondary" href="{{ url_for('pagos.listado') }}"><i class="bi bi-arrow-left"></i> Volver</a>
+        <button class="btn btn-primary"><i class="bi bi-check2"></i> Guardar</button>
+    </div>
+</form>
+{% endblock %}

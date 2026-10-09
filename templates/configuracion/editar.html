@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}Configuración{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Configuración', None, {})]) }}
+<h1 class="h4 mb-3">Configuración del estudio</h1>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <form method="post" class="card border-0">
+            <div class="card-header bg-white fw-semibold">Datos generales</div>
+            <div class="card-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="row g-3">
+                    {% for clave, etiqueta, tipo in campos %}
+                    <div class="col-md-6">
+                        <label class="form-label">{{ etiqueta }}</label>
+                        <input type="{{ tipo }}" class="form-control" name="{{ clave }}"
+                               value="{{ config.get(clave, '') }}">
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer bg-white text-end">
+                <button class="btn btn-primary"><i class="bi bi-check2"></i> Guardar configuración</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0">
+            <div class="card-header bg-white fw-semibold">Métodos de pago</div>
+            <ul class="list-group list-group-flush">
+                {% for m in metodos %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ m.nombre }}
+                        {% if m.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}
+                    </span>
+                    <form method="post" action="{{ url_for('configuracion.toggle_metodo', metodo_id=m.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="btn btn-sm btn-outline-secondary">{% if m.activo %}Desactivar{% else %}Activar{% endif %}</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="card-body">
+                <form method="post" class="d-flex gap-2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="form" value="metodos">
+                    <input type="text" class="form-control form-control-sm" name="nombre" placeholder="Nuevo método de pago" required>
+                    <button class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

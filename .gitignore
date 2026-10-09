@@ -1,0 +1,18 @@
+# Variables de entorno (NUNCA subir)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Logs
+logs/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

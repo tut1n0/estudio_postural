@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import boton_eliminar, breadcrumb %}
+{% block title %}Horarios{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Horarios', None, {})]) }}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h1 class="h4 mb-0">Grilla semanal</h1>
+        <p class="text-muted small mb-0">Horarios recurrentes por día</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('horarios.nuevo') }}"><i class="bi bi-plus-lg"></i> Nuevo horario</a>
+</div>
+
+<div class="row g-3">
+    {% for dia in dias %}
+    <div class="col-12 col-md-6 col-xl">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white fw-semibold text-center py-2">{{ dia_semana_nombre(dia) }}</div>
+            <div class="card-body p-2">
+                {% for h in grilla if h.dia_semana == dia %}
+                <div class="schedule-item mb-2 p-2 rounded {% if not h.activo %}opacity-50{% endif %}">
+                    <div class="d-flex justify-content-between">
+                        <strong class="small">{{ h.hora_inicio.strftime('%H:%M') }}–{{ h.hora_fin.strftime('%H:%M') }}</strong>
+                        <span class="badge {% if h.inscriptos >= h.cupo_maximo %}text-bg-danger{% else %}text-bg-light text-dark{% endif %}">
+                            {{ h.inscriptos }}/{{ h.cupo_maximo }}
+                        </span>
+                    </div>
+                    <div class="small">{{ h.actividad }}</div>
+                    <div class="text-muted small"><i class="bi bi-person"></i> {{ h.profesor }}{% if h.sala %} · {{ h.sala }}{% endif %}</div>
+                    <div class="mt-1 d-flex gap-1">
+                        <a class="btn btn-sm btn-outline-secondary py-0 px-1" href="{{ url_for('horarios.editar', horario_id=h.id) }}" title="Editar"><i class="bi bi-pencil"></i></a>
+                        <form method="post" action="{{ url_for('turnos.generar_semana') }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="horario_id" value="{{ h.id }}">
+                            <input type="hidden" name="cantidad" value="4">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-1" title="Generar turnos"><i class="bi bi-calendar-plus"></i></button>
+                        </form>
+                        {{ boton_eliminar(url_for('horarios.eliminar', horario_id=h.id), '¿Eliminar o desactivar este horario?', 'btn-outline-danger btn-sm py-0 px-1', 'bi-trash', '') }}
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted small text-center py-3 mb-0">Sin clases</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

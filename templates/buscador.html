@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% block title %}Búsqueda{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Búsqueda', None, {})]) }}
+<h1 class="h4 mb-3">Resultados de búsqueda</h1>
+{% if termino %}
+<p class="text-muted">Resultados para <strong>"{{ termino }}"</strong></p>
+
+<h6 class="text-uppercase text-muted small mt-4">Alumnos ({{ alumnos|length }})</h6>
+<div class="card border-0 mb-3"><div class="list-group list-group-flush">
+    {% for a in alumnos %}
+    <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('alumnos.ficha', alumno_id=a.id) }}">
+        <span>{{ a.apellido }}, {{ a.nombre }}</span>
+        <small class="text-muted">{{ a.telefono or a.email or '' }}</small>
+    </a>
+    {% else %}<div class="list-group-item text-muted">Sin coincidencias.</div>{% endfor %}
+</div></div>
+
+<h6 class="text-uppercase text-muted small">Profesores ({{ profesores|length }})</h6>
+<div class="card border-0 mb-3"><div class="list-group list-group-flush">
+    {% for p in profesores %}
+    <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('profesores.ficha', profesor_id=p.id) }}">
+        <span>{{ p.apellido }}, {{ p.nombre }}</span>
+        <small class="text-muted">{{ p.especialidad or '' }}</small>
+    </a>
+    {% else %}<div class="list-group-item text-muted">Sin coincidencias.</div>{% endfor %}
+</div></div>
+
+<h6 class="text-uppercase text-muted small">Turnos ({{ turnos|length }})</h6>
+<div class="card border-0"><div class="list-group list-group-flush">
+    {% for t in turnos %}
+    <a class="list-group-item list-group-item-action d-flex justify-content-between" href="{{ url_for('turnos.detalle', turno_id=t.id) }}">
+        <span>{{ t.actividad }} — {{ formatear_fecha(t.fecha) }} {{ formatear_hora(t.hora_inicio) }}</span>
+        {{ estados_badge(t.estado) }}
+    </a>
+    {% else %}<div class="list-group-item text-muted">Sin coincidencias.</div>{% endfor %}
+</div></div>
+{% else %}
+<p class="text-muted">Escribí un término en el buscador superior para comenzar.</p>
+{% endif %}
+{% endblock %}

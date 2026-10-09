@@ -1,0 +1,159 @@
+/* ============================================================
+   Estudio Postural - Estilos propios (sobre Bootstrap 5)
+   Estética wellness: verde salvia, terracota, tonos cálidos.
+   ============================================================ */
+
+:root {
+    --ep-primary: #6c9b7f;
+    --ep-primary-dark: #567d66;
+    --ep-primary-light: #e8f0ea;
+    --ep-terracota: #c98a7d;
+    --ep-arena: #f7f4ef;
+    --ep-ink: #2f3a34;
+    --ep-sidebar-bg: #26332c;
+    --ep-sidebar-hover: #33443a;
+    --bs-primary: #6c9b7f;
+}
+
+body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ep-ink);
+    background-color: var(--ep-arena);
+}
+
+/* Botones primarios personalizados */
+.btn-primary {
+    --bs-btn-bg: var(--ep-primary);
+    --bs-btn-border-color: var(--ep-primary);
+    --bs-btn-hover-bg: var(--ep-primary-dark);
+    --bs-btn-hover-border-color: var(--ep-primary-dark);
+    --bs-btn-active-bg: var(--ep-primary-dark);
+    --bs-btn-active-border-color: var(--ep-primary-dark);
+    --bs-btn-disabled-bg: var(--ep-primary);
+    --bs-btn-disabled-border-color: var(--ep-primary);
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--ep-primary-dark);
+    --bs-btn-border-color: var(--ep-primary);
+    --bs-btn-hover-bg: var(--ep-primary);
+    --bs-btn-hover-border-color: var(--ep-primary);
+    --bs-btn-active-bg: var(--ep-primary);
+}
+.text-primary { color: var(--ep-primary-dark) !important; }
+
+/* Layout general */
+.app-wrapper { display: flex; min-height: 100vh; }
+
+.sidebar {
+    width: 250px;
+    background: var(--ep-sidebar-bg);
+    color: #cdd6d0;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1040;
+    transition: transform .25s ease;
+}
+.sidebar-brand {
+    display: flex; align-items: center; gap: .6rem;
+    padding: 1.15rem 1.25rem;
+    color: #fff; font-weight: 600; font-size: 1.05rem;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.brand-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 10px;
+    background: var(--ep-primary); color: #fff; font-size: 1.1rem;
+}
+.sidebar .nav { padding: .75rem .6rem; flex: 1; overflow-y: auto; }
+.sidebar .nav-link {
+    color: #cdd6d0; border-radius: .6rem; padding: .55rem .8rem;
+    display: flex; align-items: center; gap: .7rem; font-size: .925rem;
+}
+.sidebar .nav-link i { font-size: 1.05rem; width: 1.25rem; text-align: center; }
+.sidebar .nav-link:hover { background: var(--ep-sidebar-hover); color: #fff; }
+.sidebar .nav-link.active { background: var(--ep-primary); color: #fff; font-weight: 600; }
+.sidebar-section {
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .08em;
+    color: #7f8c84; padding: 0 .8rem;
+}
+.sidebar-footer { padding: .9rem; border-top: 1px solid rgba(255,255,255,.08); }
+.user-chip { display: flex; align-items: center; gap: .6rem; }
+.user-chip i { font-size: 1.8rem; color: var(--ep-primary); }
+.user-meta { display: flex; flex-direction: column; line-height: 1.1; }
+.user-meta strong { color: #fff; font-size: .85rem; }
+.user-meta small { color: #9fb0a6; font-size: .68rem; }
+
+.content-area { flex: 1; margin-left: 250px; display: flex; flex-direction: column; min-width: 0; }
+
+.topbar {
+    background: #fff; border-bottom: 1px solid #e7e2d9;
+    padding: .6rem 1rem; position: sticky; top: 0; z-index: 1030;
+}
+.topbar-search { max-width: 520px; }
+.page-content { padding: 1.25rem; flex: 1; }
+
+/* Tarjetas */
+.card { border-radius: 14px; box-shadow: 0 1px 3px rgba(47,58,52,.06); }
+.card-header { border-bottom: 1px solid #eef1ec; border-radius: 14px 14px 0 0 !important; }
+
+.stat-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(47,58,52,.12); }
+.stat-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;
+}
+.stat-value { font-size: 1.35rem; font-weight: 700; line-height: 1.1; color: var(--ep-ink); }
+.stat-label { font-size: .78rem; color: #7a857d; }
+
+/* Grilla de horarios */
+.schedule-item { background: var(--ep-primary-light); border-left: 3px solid var(--ep-primary); }
+.schedule-item:hover { background: #dbe8de; }
+
+/* Login */
+.public-wrapper { min-height: 100vh; }
+.login-wrapper {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #e8f0ea 0%, #f7f4ef 55%, #f0e5df 100%);
+}
+.login-card { width: 100%; max-width: 400px; border-radius: 18px; }
+.login-brand {
+    width: 60px; height: 60px; margin: 0 auto; border-radius: 18px;
+    background: var(--ep-primary); color: #fff; font-size: 1.8rem;
+    display: flex; align-items: center; justify-content: center;
+}
+
+/* Páginas de error */
+.error-page { padding: 4rem 1rem; }
+.error-code { font-size: 5rem; font-weight: 800; color: var(--ep-primary); line-height: 1; }
+
+/* Calendario */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.calendar-head {
+    text-align: center; font-weight: 600; font-size: .8rem;
+    color: #7a857d; padding: .4rem 0; text-transform: uppercase;
+}
+.calendar-cell {
+    min-height: 96px; background: #fff; border: 1px solid #eef1ec;
+    border-radius: 8px; padding: 4px; font-size: .72rem; overflow: hidden;
+}
+.calendar-cell.empty { background: #faf9f7; border-style: dashed; }
+.calendar-cell.today { border-color: var(--ep-primary); background: var(--ep-primary-light); }
+.calendar-day { font-weight: 700; font-size: .78rem; margin-bottom: 2px; }
+.calendar-event {
+    display: block; background: var(--ep-primary); color: #fff; border-radius: 5px;
+    padding: 1px 4px; margin-bottom: 2px; text-decoration: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .68rem;
+}
+.calendar-event:hover { background: var(--ep-primary-dark); color: #fff; }
+
+.flash-container { margin-bottom: 1rem; }
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.show { transform: translateX(0); box-shadow: 0 0 30px rgba(0,0,0,.3); }
+    .content-area { margin-left: 0; }
+}

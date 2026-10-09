@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}Asistencia · {{ turno.actividad }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Asistencias', 'asistencias.pendientes', {}),
+   (turno.actividad ~ ' ' ~ formatear_fecha(turno.fecha), None, {})]) }}
+<h1 class="h4 mb-1">Asistencia — {{ turno.actividad }}</h1>
+<p class="text-muted small mb-3">{{ formatear_fecha(turno.fecha) }} · {{ formatear_hora(turno.hora_inicio) }}–{{ formatear_hora(turno.hora_fin) }} · {{ turno.profesor }}</p>
+
+<form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="card border-0">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Alumno</th><th>Presente</th><th>Ausente</th><th>Justificado</th><th>Observaciones</th></tr></thead>
+                <tbody>
+                {% for a in inscriptos %}
+                    {% set actual = a.asistencia_estado %}
+                    <tr>
+                        <td class="fw-semibold">{{ a.apellido }}, {{ a.nombre }}</td>
+                        <td><input class="form-check-input" type="radio" name="estado_{{ a.id }}" value="presente"
+                                   {% if actual == 'presente' or not actual %}checked{% endif %}></td>
+                        <td><input class="form-check-input" type="radio" name="estado_{{ a.id }}" value="ausente"
+                                   {% if actual == 'ausente' %}checked{% endif %}></td>
+                        <td><input class="form-check-input" type="radio" name="estado_{{ a.id }}" value="justificado"
+                                   {% if actual == 'justificado' %}checked{% endif %}></td>
+                        <td><input type="text" class="form-control form-control-sm" name="obs_{{ a.id }}" placeholder="Opcional"></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay alumnos inscriptos en este turno.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between">
+            <a class="btn btn-outline-secondary" href="{{ url_for('asistencias.pendientes', fecha=turno.fecha) }}"><i class="bi bi-arrow-left"></i> Volver</a>
+            <button class="btn btn-primary"><i class="bi bi-check2"></i> Guardar asistencia</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% block title %}Turnos{% endblock %}
+
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Turnos', None, {})]) }}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+        <h1 class="h4 mb-0">Calendario de turnos</h1>
+        <p class="text-muted small mb-0">{{ inicio.strftime('%d/%m/%Y') }} — {{ fin.strftime('%d/%m/%Y') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="btn-group btn-group-sm">
+            <a class="btn btn-outline-secondary {% if vista == 'dia' %}active{% endif %}" href="{{ url_for('turnos.calendario', vista='dia', fecha=fecha.isoformat()) }}">Día</a>
+            <a class="btn btn-outline-secondary {% if vista == 'semana' %}active{% endif %}" href="{{ url_for('turnos.calendario', vista='semana', fecha=fecha.isoformat()) }}">Semana</a>
+            <a class="btn btn-outline-secondary {% if vista == 'mes' %}active{% endif %}" href="{{ url_for('turnos.calendario', vista='mes', fecha=fecha.isoformat()) }}">Mes</a>
+        </div>
+        <div class="btn-group btn-group-sm">
+            <a class="btn btn-outline-primary" href="{{ url_for('turnos.calendario', vista=vista, fecha=anterior) }}"><i class="bi bi-chevron-left"></i></a>
+            <a class="btn btn-outline-primary" href="{{ url_for('turnos.calendario', vista=vista, fecha=hoy().isoformat()) }}">Hoy</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('turnos.calendario', vista=vista, fecha=siguiente) }}"><i class="bi bi-chevron-right"></i></a>
+        </div>
+    </div>
+</div>
+
+{% if vista == 'mes' %}
+<div class="card border-0">
+    <div class="card-body">
+        <div class="calendar-grid">
+            {% for d in dias %}<div class="calendar-head">{{ d }}</div>{% endfor %}
+            {% for fila in calendario_mes %}
+                {% for celda in fila %}
+                    {% if celda %}
+                    <div class="calendar-cell {% if celda.fecha == hoy() %}today{% endif %}">
+                        <div class="calendar-day">{{ celda.fecha.day }}</div>
+                        {% for t in celda.turnos %}
+                        <a href="{{ url_for('turnos.detalle', turno_id=t.id) }}"
+                           class="calendar-event {% if t.estado == 'cancelado' %}text-decoration-line-through text-muted{% endif %}"
+                           title="{{ t.actividad }} {{ formatear_hora(t.hora_inicio) }}">
+                            {{ formatear_hora(t.hora_inicio) }} {{ t.actividad }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="calendar-cell empty"></div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Fecha</th><th>Hora</th><th>Actividad</th><th>Profesor</th><th class="text-center">Inscriptos</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+            <tbody>
+            {% for t in turnos %}
+                <tr>
+                    <td class="text-nowrap">{{ t.fecha.strftime('%d/%m/%Y') }}</td>
+                    <td class="text-nowrap">{{ formatear_hora(t.hora_inicio) }}–{{ formatear_hora(t.hora_fin) }}</td>
+                    <td>{{ t.actividad }}{% if t.sala %}<br><small class="text-muted">{{ t.sala }}</small>{% endif %}</td>
+                    <td><small>{{ t.profesor }}</small></td>
+                    <td class="text-center">
+                        <span class="badge {% if t.inscriptos >= t.cupo_maximo %}text-bg-danger{% else %}text-bg-light text-dark{% endif %}">
+                            {{ t.inscriptos }} / {{ t.cupo_maximo }}
+                        </span>
+                    </td>
+                    <td>{{ estados_badge(t.estado) }}</td>
+                    <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('turnos.detalle', turno_id=t.id) }}">Gestionar</a>
+                        <a class="btn btn-sm btn-outline-success" href="{{ url_for('asistencias.tomar', turno_id=t.id) }}">Asistencia</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No hay turnos en este período. Generá turnos desde la grilla de horarios.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

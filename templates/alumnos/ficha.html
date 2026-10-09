@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb %}
+{% block title %}{{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
+
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Alumnos', 'alumnos.listado', {}),
+   (alumno.apellido ~ ', ' ~ alumno.nombre, None, {})]) }}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+    <div>
+        <h1 class="h4 mb-1">
+            {{ alumno.nombre }} {{ alumno.apellido }}
+            {% if alumno.activo %}<span class="badge text-bg-success align-middle">Activo</span>
+            {% else %}<span class="badge text-bg-secondary align-middle">Inactivo</span>{% endif %}
+        </h1>
+        <p class="text-muted small mb-0">
+            {% if alumno.dni %}DNI {{ alumno.dni }} · {% endif %}
+            Alta: {{ formatear_fecha(alumno.fecha_alta) }}
+        </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('alumnos.editar', alumno_id=alumno.id) }}">
+            <i class="bi bi-pencil"></i> Editar</a>
+        <a class="btn btn-sm btn-outline-success" href="{{ url_for('pagos.nuevo', alumno=alumno.id) }}">
+            <i class="bi bi-cash-coin"></i> Registrar pago</a>
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('asistencias.historial', alumno_id=alumno.id) }}">
+            <i class="bi bi-check2-square"></i> Ver asistencia</a>
+        {% if alumno.activo %}
+            {{ boton_eliminar(url_for('alumnos.eliminar', alumno_id=alumno.id),
+               '¿Dar de baja a este alumno? Su historial se conserva.', 'btn-sm btn-outline-danger', 'bi-person-dash', 'Dar de baja') }}
+        {% else %}
+            <form method="post" action="{{ url_for('alumnos.reactivar', alumno_id=alumno.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    {# Datos personales #}
+    <div class="col-lg-5">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white fw-semibold"><i class="bi bi-person-vcard"></i> Datos personales</div>
+            <div class="card-body">
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted">Teléfono</dt><dd class="col-7">{{ alumno.telefono or '—' }}</dd>
+                    <dt class="col-5 text-muted">Email</dt><dd class="col-7">{{ alumno.email or '—' }}</dd>
+                    <dt class="col-5 text-muted">Dirección</dt><dd class="col-7">{{ alumno.direccion or '—' }}</dd>
+                    <dt class="col-5 text-muted">Nacimiento</dt><dd class="col-7">{{ formatear_fecha(alumno.fecha_nacimiento) }}</dd>
+                    <dt class="col-5 text-muted">Emergencia</dt>
+                    <dd class="col-7">
+                        {{ alumno.contacto_emergencia or '—' }}
+                        {% if alumno.telefono_emergencia %}<br><small>{{ alumno.telefono_emergencia }}</small>{% endif %}
+                    </dd>
+                </dl>
+                {% if alumno.observaciones %}
+                <hr>
+                <p class="text-muted small mb-1"><i class="bi bi-lock-fill"></i> Observaciones (privado)</p>
+                <p class="small mb-0">{{ alumno.observaciones }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Estadísticas de asistencia #}
+    <div class="col-lg-7">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white fw-semibold"><i class="bi bi-bar-chart"></i> Resumen de asistencia</div>
+            <div class="card-body">
+                <div class="row text-center g-3">
+                    <div class="col-3"><div class="h4 mb-0">{{ estadisticas.total }}</div><small class="text-muted">Clases</small></div>
+                    <div class="col-3"><div class="h4 mb-0 text-success">{{ estadisticas.presentes }}</div><small class="text-muted">Presentes</small></div>
+                    <div class="col-3"><div class="h4 mb-0 text-danger">{{ estadisticas.ausentes }}</div><small class="text-muted">Ausentes</small></div>
+                    <div class="col-3"><div class="h4 mb-0 text-warning">{{ estadisticas.justificados }}</div><small class="text-muted">Justificados</small></div>
+                </div>
+                <div class="progress mt-3" style="height: 10px;" role="progressbar">
+                    <div class="progress-bar bg-success" style="width: {{ estadisticas.porcentaje }}%"></div>
+                </div>
+                <p class="text-muted small text-center mt-2 mb-0">{{ estadisticas.porcentaje }}% de asistencia</p>
+            </div>
+        </div>
+    </div>
+
+    {# Inscripciones / turnos #}
+    <div class="col-lg-7">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold"><i class="bi bi-calendar3-week"></i> Actividades y horarios</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Actividad</th><th>Día / Hora</th><th>Profesor</th><th>Estado</th><th></th></tr></thead>
+                    <tbody>
+                    {% for i in inscripciones %}
+                        <tr>
+                            <td>{{ i.actividad }}</td>
+                            <td>{{ dia_semana_nombre(i.dia_semana) }} <br><small class="text-muted">{{ i.hora_inicio.strftime('%H:%M') }}–{{ i.hora_fin.strftime('%H:%M') }}</small></td>
+                            <td><small>{{ i.profesor }}</small></td>
+                            <td>{{ estados_badge(i.estado) }}</td>
+                            <td class="text-end">
+                                {% if i.estado == 'activa' %}
+                                {{ boton_eliminar(url_for('alumnos.baja_inscripcion_route', inscripcion_id=i.id),
+                                   '¿Dar de baja esta inscripción?', 'btn-outline-danger btn-sm', 'bi-x-circle', '') }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="5" class="text-muted text-center py-3">Sin inscripciones.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <form method="post" action="{{ url_for('alumnos.inscribir', alumno_id=alumno.id) }}" class="row g-2 align-items-end">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <div class="col-md-5">
+                        <label class="form-label small mb-1">Asignar a horario</label>
+                        <select name="horario_id" class="form-select form-select-sm" required>
+                            <option value="">Seleccionar...</option>
+                            {% for h in horarios_disponibles %}
+                            <option value="{{ h.id }}">{{ h.actividad }} · {{ dia_semana_nombre(h.dia_semana) }} {{ h.hora_inicio.strftime('%H:%M') }} ({{ h.inscriptos }}/{{ h.cupo_maximo }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small mb-1">Desde</label>
+                        <input type="date" class="form-control form-control-sm" name="fecha_inicio" value="{{ hoy_iso }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small mb-1">Hasta</label>
+                        <input type="date" class="form-control form-control-sm" name="fecha_fin">
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Asignar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {# Ficha financiera #}
+    <div class="col-lg-5">
+        <div class="card border-0 h-100">
+            <div class="card-header bg-white fw-semibold"><i class="bi bi-cash-coin"></i> Situación de pagos</div>
+            <div class="card-body">
+                <div class="row text-center g-2 mb-3">
+                    <div class="col-4"><div class="fw-bold text-success">{{ formatear_moneda(finanzas.totales.total_pagado) }}</div><small class="text-muted">Pagado</small></div>
+                    <div class="col-4"><div class="fw-bold text-warning">{{ formatear_moneda(finanzas.totales.total_pendiente) }}</div><small class="text-muted">Pendiente</small></div>
+                    <div class="col-4"><div class="fw-bold">{{ formatear_fecha(finanzas.totales.proximo_vencimiento) }}</div><small class="text-muted">Próx. venc.</small></div>
+                </div>
+                <ul class="list-group list-group-flush small">
+                    {% for p in finanzas.historial[:6] %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <div>{{ p.concepto }}</div>
+                            <small class="text-muted">{{ formatear_fecha(p.fecha_pago or p.fecha_vencimiento) }}
+                                {% if p.metodo_pago %}· {{ p.metodo_pago }}{% endif %}</small>
+                        </div>
+                        <div class="text-end">
+                            <div>{{ formatear_moneda(p.monto) }}</div>
+                            {{ estados_badge(p.estado) }}
+                        </div>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted text-center py-3">Sin pagos registrados.</li>
+                    {% endfor %}
+                </ul>
+                <a href="{{ url_for('pagos.ficha', alumno_id=alumno.id) }}" class="btn btn-sm btn-outline-primary w-100 mt-2">Ver historial completo</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

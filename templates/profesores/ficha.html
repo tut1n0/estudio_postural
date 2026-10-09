@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import breadcrumb %}
+{% block title %}{{ profesor.nombre }} {{ profesor.apellido }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Profesores', 'profesores.listado', {}),
+   (profesor.apellido ~ ', ' ~ profesor.nombre, None, {})]) }}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="h4 mb-1">{{ profesor.nombre }} {{ profesor.apellido }}
+            {% if profesor.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}
+        </h1>
+        <p class="text-muted small mb-0">{{ profesor.especialidad or 'Sin especialidad' }} · {{ profesor.telefono or 'sin teléfono' }}</p>
+    </div>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('profesores.editar', profesor_id=profesor.id) }}"><i class="bi bi-pencil"></i> Editar</a>
+</div>
+
+<div class="card border-0">
+    <div class="card-header bg-white fw-semibold"><i class="bi bi-calendar3-week"></i> Horarios asignados</div>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Día</th><th>Hora</th><th>Actividad</th><th>Sala</th><th>Cupo</th><th>Estado</th></tr></thead>
+            <tbody>
+            {% for h in horarios %}
+                <tr>
+                    <td>{{ dia_semana_nombre(h.dia_semana) }}</td>
+                    <td>{{ formatear_hora(h.hora_inicio) }}–{{ formatear_hora(h.hora_fin) }}</td>
+                    <td>{{ h.actividad }}</td>
+                    <td>{{ h.sala or '—' }}</td>
+                    <td>{{ h.cupo_maximo }}</td>
+                    <td>{% if h.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="6" class="text-muted text-center py-3">Sin horarios asignados.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
