@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import breadcrumb %}
+{% from "partials/macros.html" import boton_eliminar, breadcrumb with context %}
 {% block title %}Configuración{% endblock %}
 {% block content %}
 {{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Configuración', None, {})]) }}
@@ -36,10 +36,14 @@
                     <span>{{ m.nombre }}
                         {% if m.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}
                     </span>
-                    <form method="post" action="{{ url_for('configuracion.toggle_metodo', metodo_id=m.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                        <button class="btn btn-sm btn-outline-secondary">{% if m.activo %}Desactivar{% else %}Activar{% endif %}</button>
-                    </form>
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{{ url_for('configuracion.toggle_metodo', metodo_id=m.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button class="btn btn-sm btn-outline-secondary">{% if m.activo %}Desactivar{% else %}Activar{% endif %}</button>
+                        </form>
+                        {{ boton_eliminar(url_for('configuracion.eliminar_metodo', metodo_id=m.id),
+                           '¿Eliminar este método de pago? Si está en uso, se desactivará.', 'btn-sm btn-outline-danger py-0 px-1', 'bi-trash', '') }}
+                    </div>
                 </li>
                 {% endfor %}
             </ul>

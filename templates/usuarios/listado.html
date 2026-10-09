@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import breadcrumb %}
+{% from "partials/macros.html" import boton_eliminar, breadcrumb with context %}
 {% block title %}Usuarios{% endblock %}
 {% block content %}
 {{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Usuarios', None, {})]) }}
@@ -18,7 +18,19 @@
                     <td>{{ u.email }}</td>
                     <td><span class="badge text-bg-{% if u.rol == 'ADMIN' %}dark{% else %}info{% endif %}">{{ u.rol }}</span></td>
                     <td>{% if u.activo %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Inactivo</span>{% endif %}</td>
-                    <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a></td>
+                    <td class="text-end text-nowrap">
+                        {% if u.activo %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a>
+                        {{ boton_eliminar(url_for('usuarios.eliminar', usuario_id=u.id),
+                           '¿Dar de baja a este usuario? No podrá iniciar sesión.', 'btn-sm btn-outline-danger', 'bi-person-dash', 'Dar de baja') }}
+                        {% else %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a>
+                        <form method="post" action="{{ url_for('usuarios.reactivar', usuario_id=u.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <button class="btn btn-sm btn-outline-success"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
+                        </form>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb %}
+{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb with context %}
 {% block title %}{{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
 
 {% block content %}

@@ -268,3 +268,26 @@ def quitar_alumno(turno_id, alumno_id):
                         f"Baja desde turno {turno_id}")
     flash("Alumno quitado del horario.", "success")
     return redirect(url_for("turnos.detalle", turno_id=turno_id))
+
+
+@bp.route("/<int:turno_id>/eliminar", methods=["POST"])
+@login_required
+def eliminar(turno_id):
+    turno = obtener_turno(turno_id)
+    if not turno:
+        abort(404)
+    asistencias = query_one(
+        "SELECT COUNT(*) AS n FROM asistencias WHERE turno_id = %s", (turno_id,)
+    )["n"]
+    if asistencias:
+        flash(
+            "El turno tiene asistencias registradas: no se eliminó. "
+            "Si ya no se dicta, cancelalo.",
+            "warning",
+        )
+        return redirect(url_for("turnos.detalle", turno_id=turno_id))
+    execute("DELETE FROM turnos WHERE id = %s", (turno_id,))
+    registrar_auditoria("eliminar", "turno", turno_id,
+                        f"Eliminación de turno {turno['fecha']}")
+    flash("Turno eliminado.", "success")
+    return redirect(url_for("turnos.calendario", fecha=str(turno["fecha"])))

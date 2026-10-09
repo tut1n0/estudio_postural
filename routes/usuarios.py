@@ -4,7 +4,7 @@ from flask import Blueprint, abort, flash, redirect, render_template, request, u
 from werkzeug.security import generate_password_hash
 
 from database import execute, query, query_one
-from helpers import email_valido, formatear_fecha, login_required, registrar_auditoria, rol_requerido
+from helpers import email_valido, formatear_fecha, login_required, registrar_auditoria, rol_requerido, usuario_actual
 
 bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 
@@ -116,3 +116,45 @@ def editar(usuario_id):
         return redirect(url_for("usuarios.listado"))
     return render_template("usuarios/form.html", datos=usuario, modo="editar",
                            roles=ROLES, usuario_id=usuario_id)
+
+
+@bp.route("/<int:usuario_id>/eliminar", methods=["POST"])
+@login_required
+@rol_requerido("ADMIN")
+def eliminar(usuario_id):
+    """Baja lógica: desactiva el usuario. Nunca se borra físicamente."""
+    usuario = query_one("SELECT * FROM usuarios WHERE id = %s", (usuario_id,))
+    if not usuario:
+        abort(404)
+    if usuario_id == usuario_actual()["id"]:
+        flash("No podés darte de baja a vos mismo.", "danger")
+        return redirect(url_for("usuarios.listado"))
+    if not usuario["activo"]:
+        flash("El usuario ya está inactivo.", "warning")
+        return redirect(url_for("usuarios.listado"))
+    if usuario["rol"] == "ADMIN":
+        activos = query_one(
+            "SELECT COUNT(*) AS n FROM usuarios WHERE rol = 'ADMIN' AND activo"
+        )["n"]
+        if activos <= 1:
+            flash("No podés dar de baja al último administrador activo.", "danger")
+            return redirect(url_for("usuarios.listado"))
+    execute("UPDATE usuarios SET activo = FALSE WHERE id = %s", (usuario_id,))
+    registrar_auditoria("eliminar", "usuario", usuario_id,
+                        f"Baja de {usuario['nombre']} {usuario['apellido']}")
+    flash("Usuario dado de baja. Su historial se conserva.", "success")
+    return redirect(url_for("usuarios.listado"))
+
+
+@bp.route("/<int:usuario_id>/reactivar", methods=["POST"])
+@login_required
+@rol_requerido("ADMIN")
+def reactivar(usuario_id):
+    usuario = query_one("SELECT * FROM usuarios WHERE id = %s", (usuario_id,))
+    if not usuario:
+        abort(404)
+    execute("UPDATE usuarios SET activo = TRUE WHERE id = %s", (usuario_id,))
+    registrar_auditoria("modificar", "usuario", usuario_id,
+                        f"Reactivación de {usuario['nombre']}")
+    flash("Usuario reactivado.", "success")
+    return redirect(url_for("usuarios.listado"))

@@ -2,7 +2,7 @@
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
-from database import query, query_one
+from database import execute, query, query_one
 from helpers import formatear_fecha, formatear_hora, hoy, login_required, registrar_auditoria
 from models import (
     alumnos_inscriptos_al_turno,
@@ -97,3 +97,15 @@ def historial(alumno_id):
         formatear_fecha=formatear_fecha,
         formatear_hora=formatear_hora,
     )
+
+
+@bp.route("/<int:asistencia_id>/eliminar", methods=["POST"])
+@login_required
+def eliminar(asistencia_id):
+    asistencia = query_one("SELECT * FROM asistencias WHERE id = %s", (asistencia_id,))
+    if not asistencia:
+        abort(404)
+    execute("DELETE FROM asistencias WHERE id = %s", (asistencia_id,))
+    registrar_auditoria("eliminar", "asistencia", asistencia_id, "Anulación de asistencia")
+    flash("Asistencia anulada.", "success")
+    return redirect(request.referrer or url_for("asistencias.pendientes"))

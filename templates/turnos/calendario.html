@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb with context %}
 {% block title %}Turnos{% endblock %}
 
 {% block content %}
@@ -70,6 +70,8 @@
                     <td class="text-end text-nowrap">
                         <a class="btn btn-sm btn-outline-primary" href="{{ url_for('turnos.detalle', turno_id=t.id) }}">Gestionar</a>
                         <a class="btn btn-sm btn-outline-success" href="{{ url_for('asistencias.tomar', turno_id=t.id) }}">Asistencia</a>
+                        {{ boton_eliminar(url_for('turnos.eliminar', turno_id=t.id),
+                           '¿Eliminar este turno? Si tiene asistencias no se borrará.', 'btn-sm btn-outline-danger py-0 px-1', 'bi-trash', '') }}
                     </td>
                 </tr>
             {% else %}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import estados_badge, breadcrumb %}
+{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb with context %}
 {% block title %}Asistencia de {{ alumno.nombre }}{% endblock %}
 {% block content %}
 {{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Alumnos', 'alumnos.listado', {}),
@@ -17,7 +17,7 @@
 <div class="card border-0">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead><tr><th>Fecha</th><th>Hora</th><th>Actividad</th><th>Estado</th><th>Observaciones</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Hora</th><th>Actividad</th><th>Estado</th><th>Observaciones</th><th></th></tr></thead>
             <tbody>
             {% for h in historial %}
                 <tr>
@@ -26,9 +26,13 @@
                     <td>{{ h.actividad }}</td>
                     <td>{{ estados_badge(h.estado) }}</td>
                     <td><small>{{ h.observaciones or '—' }}</small></td>
+                    <td class="text-end">
+                        {{ boton_eliminar(url_for('asistencias.eliminar', asistencia_id=h.id),
+                           '¿Anular esta asistencia?', 'btn-sm btn-outline-danger py-0 px-1', 'bi-trash', '') }}
+                    </td>
                 </tr>
             {% else %}
-                <tr><td colspan="5" class="text-center text-muted py-4">Sin registros de asistencia.</td></tr>
+                <tr><td colspan="6" class="text-center text-muted py-4">Sin registros de asistencia.</td></tr>
             {% endfor %}
             </tbody>
         </table>

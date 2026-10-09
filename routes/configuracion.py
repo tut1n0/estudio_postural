@@ -1,6 +1,6 @@
 """Configuración del estudio (clave/valor, sin hardcodear)."""
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
 from database import query
 from helpers import login_required, registrar_auditoria
@@ -63,4 +63,25 @@ def toggle_metodo(metodo_id):
     if metodo:
         execute("UPDATE metodos_pago SET activo = NOT activo WHERE id = %s", (metodo_id,))
         registrar_auditoria("modificar", "metodo_pago", metodo_id, metodo["nombre"])
+    return redirect(url_for("configuracion.editar"))
+
+
+@bp.route("/metodos/<int:metodo_id>/eliminar", methods=["POST"])
+@login_required
+def eliminar_metodo(metodo_id):
+    from database import execute, query_one
+
+    metodo = query_one("SELECT * FROM metodos_pago WHERE id = %s", (metodo_id,))
+    if not metodo:
+        abort(404)
+    en_uso = query_one(
+        "SELECT COUNT(*) AS n FROM pagos WHERE metodo_pago_id = %s", (metodo_id,)
+    )["n"]
+    if en_uso:
+        execute("UPDATE metodos_pago SET activo = FALSE WHERE id = %s", (metodo_id,))
+        flash("El método está asociado a pagos: se desactivó en lugar de eliminarlo.", "warning")
+    else:
+        execute("DELETE FROM metodos_pago WHERE id = %s", (metodo_id,))
+        flash("Método de pago eliminado.", "success")
+    registrar_auditoria("eliminar", "metodo_pago", metodo_id, metodo["nombre"])
     return redirect(url_for("configuracion.editar"))

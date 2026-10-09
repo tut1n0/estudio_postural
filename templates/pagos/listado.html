@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import estados_badge, paginacion, boton_eliminar, breadcrumb %}
+{% from "partials/macros.html" import estados_badge, paginacion, boton_eliminar, breadcrumb with context %}
 {% block title %}Pagos{% endblock %}
 {% block content %}
 {{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Pagos', None, {})]) }}
