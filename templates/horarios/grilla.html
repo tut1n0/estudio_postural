@@ -86,25 +86,44 @@
                     {% set fin_min = h.hora_fin.hour * 60 + h.hora_fin.minute %}
                     {% set top = (inicio_min - rango_inicio_min) / rango_total_min * 100 %}
                     {% set alto = (fin_min - inicio_min) / rango_total_min * 100 %}
-                    <div class="cal-event cal-c{{ (h.actividad_id % 5) + 1 }}" style="top: {{ top }}%; height: {{ alto }}%;">
+                    <div class="cal-event cal-c{{ (h.actividad_id % 5) + 1 }} {% if not h.activo %}opacity-75{% endif %}" style="top: {{ top }}%; height: {{ alto }}%;">
                         <div class="cal-event-top">
-                            <strong>{{ h.hora_inicio.strftime('%H:%M') }}–{{ h.hora_fin.strftime('%H:%M') }}</strong>
-                            <span class="badge {% if h.inscriptos >= h.cupo_maximo %}text-bg-danger{% else %}text-bg-light text-dark{% endif %}">
-                                {{ h.inscriptos }}/{{ h.cupo_maximo }}
-                            </span>
+                            <strong class="cal-event-time">{{ h.hora_inicio.strftime('%H:%M') }}–{{ h.hora_fin.strftime('%H:%M') }}</strong>
+                            <div class="dropdown">
+                                <button class="cal-event-menu" type="button" data-bs-toggle="dropdown"
+                                        aria-expanded="false" title="Opciones">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('horarios.editar', horario_id=h.id) }}">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form method="post" action="{{ url_for('turnos.generar_semana') }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <input type="hidden" name="horario_id" value="{{ h.id }}">
+                                            <input type="hidden" name="cantidad" value="4">
+                                            <button class="dropdown-item"><i class="bi bi-calendar-plus"></i> Generar turnos</button>
+                                        </form>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form method="post" action="{{ url_for('horarios.eliminar', horario_id=h.id) }}"
+                                              onsubmit="return confirm('¿Eliminar o desactivar este horario?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                            <button class="dropdown-item text-danger"><i class="bi bi-trash"></i> Eliminar</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <div class="cal-event-title">{{ h.actividad }}</div>
+                        <div class="cal-event-title">
+                            <span class="badge {% if h.inscriptos >= h.cupo_maximo %}text-bg-danger{% else %}text-bg-light text-dark{% endif %}">{{ h.inscriptos }}/{{ h.cupo_maximo }}</span>
+                            {{ h.actividad }}
+                        </div>
                         <div class="cal-event-meta"><i class="bi bi-person"></i> {{ h.profesor }}{% if h.sala %} · {{ h.sala }}{% endif %}</div>
-                        <div class="cal-event-actions">
-                            <a class="btn btn-light btn-sm py-0 px-1" href="{{ url_for('horarios.editar', horario_id=h.id) }}" title="Editar"><i class="bi bi-pencil"></i></a>
-                            <form method="post" action="{{ url_for('turnos.generar_semana') }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                                <input type="hidden" name="horario_id" value="{{ h.id }}">
-                                <input type="hidden" name="cantidad" value="4">
-                                <button class="btn btn-light btn-sm py-0 px-1" title="Generar turnos"><i class="bi bi-calendar-plus"></i></button>
-                            </form>
-                            {{ boton_eliminar(url_for('horarios.eliminar', horario_id=h.id), '¿Eliminar o desactivar este horario?', 'btn-light btn-sm py-0 px-1', 'bi-trash', '') }}
-                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -112,6 +131,6 @@
         </div>
     </div>
 </div>
-<p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle"></i> Hacé clic en un espacio libre para agregar una clase en ese día y hora.</p>
+<p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle"></i> Hacé clic en un espacio libre para agregar una clase en ese día y hora. En cada clase, usá el menú <i class="bi bi-three-dots-vertical"></i> para editar, generar turnos o eliminar.</p>
 {% endif %}
 {% endblock %}
