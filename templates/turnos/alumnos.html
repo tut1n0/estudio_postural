@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import estados_badge, boton_eliminar, breadcrumb with context %}
+{% block title %}Alumnos · Turno #{{ turno.id }}{% endblock %}
+{% block content %}
+{{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Turnos', 'turnos.calendario', {}),
+   ('Turno #' ~ turno.id, 'turnos.detalle', {'turno_id': turno.id}),
+   ('Alumnos', None, {})]) }}
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-3 gap-2">
+    <div>
+        <h1 class="h4 mb-1">Alumnos del grupo {{ estados_badge(turno.estado) }}</h1>
+        <p class="text-muted small mb-0">
+            {{ turno.actividad }} · {{ formatear_fecha(turno.fecha) }}
+            · {{ formatear_hora(turno.hora_inicio) }}–{{ formatear_hora(turno.hora_fin) }}
+            · {{ turno.profesor }}{% if turno.sala %} · {{ turno.sala }}{% endif %}
+        </p>
+    </div>
+    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('turnos.detalle', turno_id=turno.id) }}">
+        <i class="bi bi-arrow-left"></i> Volver al turno
+    </a>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card border-0">
+            <div class="card-header bg-white d-flex justify-content-between">
+                <span class="fw-semibold">Inscriptos ({{ inscriptos|length }} / {{ turno.cupo_maximo }})</span>
+                <span class="text-muted small">{{ disponibles }} cupo(s) libre(s)</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead><tr><th>Alumno</th><th>Teléfono</th><th>Desde</th><th></th></tr></thead>
+                    <tbody>
+                    {% for a in inscriptos %}
+                        <tr>
+                            <td>{{ a.apellido }}, {{ a.nombre }}</td>
+                            <td>{{ a.telefono or '—' }}</td>
+                            <td><small class="text-muted">{{ a.fecha_inicio.strftime('%d/%m/%Y') if a.fecha_inicio else '—' }}</small></td>
+                            <td class="text-end">
+                                <form method="post" action="{{ url_for('turnos.quitar_alumno', turno_id=turno.id, alumno_id=a.id) }}"
+                                      onsubmit="return confirm('¿Quitar a {{ a.nombre }} del grupo?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden" name="volver" value="alumnos">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-1" title="Quitar del grupo"><i class="bi bi-x-circle"></i> Quitar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="text-muted text-center py-3">Sin inscriptos en el grupo.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0">
+            <div class="card-header bg-white fw-semibold">Agregar alumno al grupo</div>
+            <div class="card-body">
+                {% if disponibles <= 0 %}
+                <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle"></i> Cupo completo. No se pueden agregar más alumnos.</p>
+                {% else %}
+                <form method="get" class="mb-3">
+                    <div class="input-group input-group-sm">
+                        <input type="search" class="form-control" name="q" value="{{ buscar }}"
+                               placeholder="Buscar por nombre, apellido o DNI" autocomplete="off">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+
+                <div class="list-group list-group-flush" style="max-height: 420px; overflow-y: auto;">
+                    {% for a in no_inscriptos %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <div class="fw-semibold small">{{ a.apellido }}, {{ a.nombre }}</div>
+                            <div class="text-muted small">{{ a.telefono or '—' }}{% if a.dni %} · DNI {{ a.dni }}{% endif %}</div>
+                        </div>
+                        <form method="post" action="{{ url_for('turnos.agregar_alumno', turno_id=turno.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="volver" value="alumnos">
+                            <input type="hidden" name="alumno_id" value="{{ a.id }}">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-2"><i class="bi bi-plus-lg"></i> Agregar</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="text-muted small text-center py-3">
+                        {% if buscar %}No se encontraron alumnos para "{{ buscar }}".{% else %}No hay alumnos disponibles para agregar.{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

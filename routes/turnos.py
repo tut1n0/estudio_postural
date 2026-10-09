@@ -15,8 +15,9 @@ from helpers import (
 )
 from models import (
     alumnos_inscriptos_al_turno,
+    alumnos_inscriptos_en_horario,
+    alumnos_no_inscriptos_en_horario,
     inscriptos_disponibles,
-    listar_alumnos,
     obtener_turno,
     turnos_por_fecha,
 )
@@ -48,6 +49,13 @@ def _rango_vista(vista: str, fecha: date) -> tuple[date, date, date]:
     inicio = fecha - timedelta(days=fecha.weekday())
     fin = inicio + timedelta(days=6)
     return inicio, fin, fecha
+
+
+def _destino(turno_id: int):
+    """Vuelve a la pantalla de alumnos si el formulario lo pide; si no, al detalle."""
+    if request.form.get("volver") == "alumnos":
+        return redirect(url_for("turnos.alumnos", turno_id=turno_id))
+    return redirect(url_for("turnos.detalle", turno_id=turno_id))
 
 
 @bp.route("/")
@@ -164,49 +172,40 @@ def detalle(turno_id):
         abort(404)
     inscriptos = alumnos_inscriptos_al_turno(turno_id)
     disponibles = max(0, (turno["cupo_maximo"] or 0) - len(inscriptos))
-
-    # Alumnos no inscriptos que se pueden agregar
-    candidatos = query(
-        """
-        SELECT al.id, al.nombre, al.apellido, al.telefono
-        FROM alumnos al
-        WHERE al.activo = TRUE
-          AND EXISTS (
-              SELECT 1 FROM inscripciones i
-              WHERE i.alumno_id = al.id AND i.horario_id = %s AND i.estado = 'activa'
-          )
-          AND NOT EXISTS (
-              SELECT 1 FROM inscripciones i2
-              WHERE i2.alumno_id = al.id AND i2.horario_id = %s AND i2.estado = 'activa'
-          )
-        ORDER BY al.apellido
-        """,
-        (turno["horario_id"], turno["horario_id"]),
-    )
-    # Alumnos del horario ya inscriptos (para asistencia) y posibles extra (sin inscripción)
-    posibles_extra = query(
-        """
-        SELECT al.id, al.nombre, al.apellido, al.telefono
-        FROM alumnos al
-        WHERE al.activo = TRUE
-          AND NOT EXISTS (
-              SELECT 1 FROM asistencias a WHERE a.turno_id = %s AND a.alumno_id = al.id
-          )
-        ORDER BY al.apellido, al.nombre
-        LIMIT 50
-        """,
-        (turno_id,),
-    )
+    # Alumnos activos que pueden sumarse al grupo (aún no inscriptos)
+    no_inscriptos = alumnos_no_inscriptos_en_horario(turno["horario_id"])
     return render_template(
         "turnos/detalle.html",
         turno=turno,
         inscriptos=inscriptos,
         disponibles=disponibles,
-        candidatos=candidatos,
-        posibles_extra=posibles_extra,
+        no_inscriptos=no_inscriptos,
         formatear_hora=formatear_hora,
         formatear_fecha=formatear_fecha,
         hoy=hoy(),
+    )
+
+
+@bp.route("/<int:turno_id>/alumnos")
+@login_required
+def alumnos(turno_id):
+    """Editar los alumnos del grupo desde una clase puntual."""
+    turno = obtener_turno(turno_id)
+    if not turno:
+        abort(404)
+    buscar = request.args.get("q", "").strip()
+    inscriptos = alumnos_inscriptos_en_horario(turno["horario_id"])
+    disponibles = inscriptos_disponibles(turno["horario_id"])
+    no_inscriptos = alumnos_no_inscriptos_en_horario(turno["horario_id"], buscar)
+    return render_template(
+        "turnos/alumnos.html",
+        turno=turno,
+        inscriptos=inscriptos,
+        disponibles=disponibles,
+        no_inscriptos=no_inscriptos,
+        buscar=buscar,
+        formatear_hora=formatear_hora,
+        formatear_fecha=formatear_fecha,
     )
 
 
@@ -235,11 +234,11 @@ def agregar_alumno(turno_id):
     alumno_id = request.form.get("alumno_id", type=int)
     if not alumno_id:
         flash("Seleccioná un alumno.", "warning")
-        return redirect(url_for("turnos.detalle", turno_id=turno_id))
+        return _destino(turno_id)
 
     if inscriptos_disponibles(turno["horario_id"]) <= 0:
         flash("No hay cupos disponibles en este horario.", "danger")
-        return redirect(url_for("turnos.detalle", turno_id=turno_id))
+        return _destino(turno_id)
 
     from models import alumno_inscripto_en_horario, inscribir_alumno
 
@@ -250,7 +249,7 @@ def agregar_alumno(turno_id):
         registrar_auditoria("crear", "inscripcion", alumno_id,
                             f"Alta desde turno {turno_id}")
         flash("Alumno agregado al horario del turno.", "success")
-    return redirect(url_for("turnos.detalle", turno_id=turno_id))
+    return _destino(turno_id)
 
 
 @bp.route("/<int:turno_id>/quitar-alumno/<int:alumno_id>", methods=["POST"])
@@ -267,7 +266,7 @@ def quitar_alumno(turno_id, alumno_id):
     registrar_auditoria("modificar", "inscripcion", alumno_id,
                         f"Baja desde turno {turno_id}")
     flash("Alumno quitado del horario.", "success")
-    return redirect(url_for("turnos.detalle", turno_id=turno_id))
+    return _destino(turno_id)
 
 
 @bp.route("/<int:turno_id>/eliminar", methods=["POST"])

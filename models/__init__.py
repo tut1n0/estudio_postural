@@ -320,6 +320,47 @@ def inscriptos_disponibles(horario_id: int) -> int:
     return int(fila["disponibles"]) if fila else 0
 
 
+def alumnos_inscriptos_en_horario(horario_id: int) -> list[dict]:
+    """Alumnos con inscripción activa en el grupo (horario)."""
+    return query(
+        """
+        SELECT al.id, al.nombre, al.apellido, al.telefono, al.dni,
+               i.id AS inscripcion_id, i.fecha_inicio
+        FROM inscripciones i
+        JOIN alumnos al ON al.id = i.alumno_id
+        WHERE i.horario_id = %s AND i.estado = 'activa'
+        ORDER BY al.apellido, al.nombre
+        """,
+        (horario_id,),
+    )
+
+
+def alumnos_no_inscriptos_en_horario(horario_id: int, buscar: str = "") -> list[dict]:
+    """Alumnos activos que aún no están inscriptos en el grupo (para agregar)."""
+    condiciones = ["al.activo = TRUE"]
+    params: list[Any] = []
+    if buscar:
+        condiciones.append(
+            "(al.nombre ILIKE %s OR al.apellido ILIKE %s OR al.dni ILIKE %s)"
+        )
+        patron = f"%{buscar}%"
+        params.extend([patron, patron, patron])
+    where = " AND ".join(condiciones)
+    return query(
+        f"""
+        SELECT al.id, al.nombre, al.apellido, al.telefono, al.dni
+        FROM alumnos al
+        WHERE {where}
+          AND NOT EXISTS (
+              SELECT 1 FROM inscripciones i
+              WHERE i.alumno_id = al.id AND i.horario_id = %s AND i.estado = 'activa'
+          )
+        ORDER BY al.apellido, al.nombre
+        """,
+        [*params, horario_id],
+    )
+
+
 # ------------------------------------------------------------
 # Asistencias
 # ------------------------------------------------------------

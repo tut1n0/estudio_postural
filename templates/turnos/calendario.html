@@ -34,11 +34,18 @@
                     <div class="calendar-cell {% if celda.fecha == hoy() %}today{% endif %}">
                         <div class="calendar-day">{{ celda.fecha.day }}</div>
                         {% for t in celda.turnos %}
-                        <a href="{{ url_for('turnos.detalle', turno_id=t.id) }}"
-                           class="calendar-event {% if t.estado == 'cancelado' %}text-decoration-line-through text-muted{% endif %}"
-                           title="{{ t.actividad }} {{ formatear_hora(t.hora_inicio) }}">
-                            {{ formatear_hora(t.hora_inicio) }} {{ t.actividad }}
-                        </a>
+                        <div class="calendar-event-wrap {% if t.estado == 'cancelado' %}text-decoration-line-through text-muted{% endif %}">
+                            <a href="{{ url_for('turnos.detalle', turno_id=t.id) }}"
+                               class="calendar-event flex-grow-1"
+                               title="{{ t.actividad }} {{ formatear_hora(t.hora_inicio) }} · {{ t.inscriptos }}/{{ t.cupo_maximo }} alumnos">
+                                <span class="ce-label">{{ formatear_hora(t.hora_inicio) }} {{ t.actividad }}</span>
+                                <span class="ce-count">{{ t.inscriptos }}/{{ t.cupo_maximo }}</span>
+                            </a>
+                            <a href="{{ url_for('turnos.alumnos', turno_id=t.id) }}"
+                               class="calendar-event-edit" title="Editar alumnos">
+                                <i class="bi bi-people"></i>
+                            </a>
+                        </div>
                         {% endfor %}
                     </div>
                     {% else %}
@@ -68,6 +75,7 @@
                     </td>
                     <td>{{ estados_badge(t.estado) }}</td>
                     <td class="text-end text-nowrap">
+                        <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('turnos.alumnos', turno_id=t.id) }}"><i class="bi bi-people"></i> Alumnos</a>
                         <a class="btn btn-sm btn-outline-primary" href="{{ url_for('turnos.detalle', turno_id=t.id) }}">Gestionar</a>
                         <a class="btn btn-sm btn-outline-success" href="{{ url_for('asistencias.tomar', turno_id=t.id) }}">Asistencia</a>
                         {{ boton_eliminar(url_for('turnos.eliminar', turno_id=t.id),

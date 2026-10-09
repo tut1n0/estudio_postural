@@ -62,7 +62,10 @@
     </div>
     <div class="col-lg-4">
         <div class="card border-0">
-            <div class="card-header bg-white fw-semibold">Agregar alumno</div>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-semibold">Agregar alumno</span>
+                <a class="small" href="{{ url_for('turnos.alumnos', turno_id=turno.id) }}"><i class="bi bi-people"></i> Editar grupo</a>
+            </div>
             <div class="card-body">
                 {% if disponibles > 0 %}
                 <form method="post" action="{{ url_for('turnos.agregar_alumno', turno_id=turno.id) }}">
@@ -70,7 +73,7 @@
                     <label class="form-label small">Alumno</label>
                     <select name="alumno_id" class="form-select form-select-sm mb-2" required>
                         <option value="">Seleccionar...</option>
-                        {% for a in posibles_extra %}
+                        {% for a in no_inscriptos %}
                         <option value="{{ a.id }}">{{ a.apellido }}, {{ a.nombre }}</option>
                         {% endfor %}
                     </select>

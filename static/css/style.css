@@ -144,12 +144,24 @@ body {
 .calendar-cell.empty { background: #faf9f7; border-style: dashed; }
 .calendar-cell.today { border-color: var(--ep-primary); background: var(--ep-primary-light); }
 .calendar-day { font-weight: 700; font-size: .78rem; margin-bottom: 2px; }
+.calendar-event-wrap { display: flex; align-items: center; gap: 2px; margin-bottom: 2px; }
 .calendar-event {
-    display: block; background: var(--ep-primary); color: #fff; border-radius: 5px;
-    padding: 1px 4px; margin-bottom: 2px; text-decoration: none;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .68rem;
+    display: flex; align-items: center; gap: .25rem;
+    background: var(--ep-primary); color: #fff; border-radius: 5px;
+    padding: 1px 4px; text-decoration: none; min-width: 0;
+    white-space: nowrap; overflow: hidden; font-size: .68rem;
 }
 .calendar-event:hover { background: var(--ep-primary-dark); color: #fff; }
+.calendar-event .ce-label { overflow: hidden; text-overflow: ellipsis; flex: 1 1 auto; }
+.calendar-event .ce-count {
+    flex: 0 0 auto; background: rgba(255,255,255,.28); border-radius: 4px;
+    padding: 0 3px; font-variant-numeric: tabular-nums;
+}
+.calendar-event-edit {
+    flex: 0 0 auto; background: var(--ep-primary-dark); color: #fff;
+    border-radius: 5px; padding: 1px 4px; font-size: .68rem; text-decoration: none;
+}
+.calendar-event-edit:hover { background: var(--ep-primary); color: #fff; }
 
 .flash-container { margin-bottom: 1rem; }
 
