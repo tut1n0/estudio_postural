@@ -159,3 +159,82 @@ body {
     .sidebar.show { transform: translateX(0); box-shadow: 0 0 30px rgba(0,0,0,.3); }
     .content-area { margin-left: 0; }
 }
+
+/* ============================================================
+   Calendario semanal de horarios (filas por hora, columnas por día)
+   ============================================================ */
+.week-calendar {
+    --cal-hour-h: 54px;
+    --cal-gutter-w: 56px;
+    --cal-day-min: 104px;
+    overflow-x: auto;
+}
+.week-calendar-inner { min-width: 820px; }
+
+.cal-head {
+    display: flex;
+    position: sticky; top: 0; z-index: 3;
+    background: #fff;
+    border-bottom: 1px solid #e7e7e7;
+}
+.cal-gutter-head { flex: 0 0 var(--cal-gutter-w); width: var(--cal-gutter-w); }
+.cal-day-head {
+    flex: 1 1 0; min-width: var(--cal-day-min);
+    text-align: center; padding: .5rem .25rem;
+    font-weight: 600; font-size: .8rem;
+    border-left: 1px solid #f1f1f1;
+}
+.cal-day-head.is-today { background: var(--ep-primary-light); color: var(--ep-primary-dark); }
+
+.cal-body { display: flex; }
+.cal-gutter { flex: 0 0 var(--cal-gutter-w); width: var(--cal-gutter-w); }
+.cal-hour-label {
+    height: var(--cal-hour-h);
+    display: flex; justify-content: flex-end;
+    padding-right: .45rem; padding-top: 2px;
+    font-size: .68rem; color: #9aa39c; line-height: 1;
+}
+
+.cal-day-col {
+    position: relative;
+    flex: 1 1 0; min-width: var(--cal-day-min);
+    height: calc(var(--cal-hours) * var(--cal-hour-h));
+    border-left: 1px solid #f1f1f1;
+}
+.cal-day-col.is-today { background: rgba(108, 155, 127, .06); }
+
+.cal-slot {
+    position: absolute; left: 0; right: 0;
+    height: var(--cal-hour-h);
+    border-top: 1px solid #f1f1f1;
+    text-decoration: none;
+}
+.cal-slot:hover { background: rgba(108, 155, 127, .12); }
+
+.cal-event {
+    position: absolute; left: 2px; right: 2px;
+    border-radius: 7px;
+    padding: .25rem .45rem;
+    overflow: hidden;
+    font-size: .72rem; line-height: 1.2;
+    color: var(--ep-ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+}
+.cal-event-top {
+    display: flex; justify-content: space-between; align-items: center; gap: .25rem;
+}
+.cal-event-top .badge { font-size: .62rem; }
+.cal-event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event-meta { color: #5a6a60; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event-actions { display: flex; gap: .2rem; margin-top: .2rem; }
+
+.cal-c1 { background: #dbe9df; border-left: 3px solid #6c9b7f; }
+.cal-c2 { background: #f3e2d0; border-left: 3px solid #c98a7d; }
+.cal-c3 { background: #d9e6f2; border-left: 3px solid #6f8fbf; }
+.cal-c4 { background: #f0e6cf; border-left: 3px solid #b79a6a; }
+.cal-c5 { background: #e7ddef; border-left: 3px solid #9b7fb0; }
+
+@media (max-width: 575.98px) {
+    .week-calendar { --cal-hour-h: 48px; }
+    .week-calendar-inner { min-width: 720px; }
+}

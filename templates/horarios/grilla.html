@@ -5,17 +5,28 @@
 {{ breadcrumb([('Inicio', 'dashboard.index', {}), ('Horarios', None, {})]) }}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
     <div>
-        <h1 class="h4 mb-0">Grilla semanal</h1>
-        <p class="text-muted small mb-0">Horarios recurrentes por día</p>
+        <h1 class="h4 mb-0">Horarios</h1>
+        <p class="text-muted small mb-0">Grilla semanal de clases por día y hora</p>
     </div>
-    <a class="btn btn-primary btn-sm" href="{{ url_for('horarios.nuevo') }}"><i class="bi bi-plus-lg"></i> Nuevo horario</a>
+    <div class="d-flex gap-2">
+        <div class="btn-group btn-group-sm" role="group" aria-label="Vista">
+            <a class="btn btn-outline-secondary {% if vista == 'calendario' %}active{% endif %}"
+               href="{{ url_for('horarios.grilla', vista='calendario') }}"><i class="bi bi-calendar3-week"></i> Calendario</a>
+            <a class="btn btn-outline-secondary {% if vista == 'lista' %}active{% endif %}"
+               href="{{ url_for('horarios.grilla', vista='lista') }}"><i class="bi bi-list-ul"></i> Lista</a>
+        </div>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('horarios.nuevo') }}"><i class="bi bi-plus-lg"></i> Nuevo horario</a>
+    </div>
 </div>
 
+{% if vista == 'lista' %}
 <div class="row g-3">
     {% for dia in dias %}
     <div class="col-12 col-md-6 col-xl">
         <div class="card border-0 h-100">
-            <div class="card-header bg-white fw-semibold text-center py-2">{{ dia_semana_nombre(dia) }}</div>
+            <div class="card-header bg-white fw-semibold text-center py-2 {% if dia == hoy_dia %}text-primary{% endif %}">
+                {{ dia_semana_nombre(dia) }}
+            </div>
             <div class="card-body p-2">
                 {% for h in grilla if h.dia_semana == dia %}
                 <div class="schedule-item mb-2 p-2 rounded {% if not h.activo %}opacity-50{% endif %}">
@@ -46,4 +57,61 @@
     </div>
     {% endfor %}
 </div>
+
+{% else %}
+<div class="week-calendar card border-0">
+    <div class="week-calendar-inner">
+        <div class="cal-head">
+            <div class="cal-gutter-head"></div>
+            {% for dia in dias %}
+            <div class="cal-day-head {% if dia == hoy_dia %}is-today{% endif %}">{{ dia_semana_nombre(dia) }}</div>
+            {% endfor %}
+        </div>
+        <div class="cal-body" style="--cal-hours: {{ horas|length }};">
+            <div class="cal-gutter">
+                {% for hora in horas %}
+                <div class="cal-hour-label">{{ '%02d:00'|format(hora) }}</div>
+                {% endfor %}
+            </div>
+            {% for dia in dias %}
+            <div class="cal-day-col {% if dia == hoy_dia %}is-today{% endif %}">
+                {% for hora in horas %}
+                <a class="cal-slot" style="top: calc({{ loop.index0 }} * var(--cal-hour-h));"
+                   href="{{ url_for('horarios.nuevo', dia=dia, hora='%02d:00'|format(hora)) }}"
+                   title="Agregar clase · {{ dia_semana_nombre(dia) }} {{ '%02d:00'|format(hora) }}"></a>
+                {% endfor %}
+
+                {% for h in grilla if h.dia_semana == dia %}
+                    {% set inicio_min = h.hora_inicio.hour * 60 + h.hora_inicio.minute %}
+                    {% set fin_min = h.hora_fin.hour * 60 + h.hora_fin.minute %}
+                    {% set top = (inicio_min - rango_inicio_min) / rango_total_min * 100 %}
+                    {% set alto = (fin_min - inicio_min) / rango_total_min * 100 %}
+                    <div class="cal-event cal-c{{ (h.actividad_id % 5) + 1 }}" style="top: {{ top }}%; height: {{ alto }}%;">
+                        <div class="cal-event-top">
+                            <strong>{{ h.hora_inicio.strftime('%H:%M') }}–{{ h.hora_fin.strftime('%H:%M') }}</strong>
+                            <span class="badge {% if h.inscriptos >= h.cupo_maximo %}text-bg-danger{% else %}text-bg-light text-dark{% endif %}">
+                                {{ h.inscriptos }}/{{ h.cupo_maximo }}
+                            </span>
+                        </div>
+                        <div class="cal-event-title">{{ h.actividad }}</div>
+                        <div class="cal-event-meta"><i class="bi bi-person"></i> {{ h.profesor }}{% if h.sala %} · {{ h.sala }}{% endif %}</div>
+                        <div class="cal-event-actions">
+                            <a class="btn btn-light btn-sm py-0 px-1" href="{{ url_for('horarios.editar', horario_id=h.id) }}" title="Editar"><i class="bi bi-pencil"></i></a>
+                            <form method="post" action="{{ url_for('turnos.generar_semana') }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="horario_id" value="{{ h.id }}">
+                                <input type="hidden" name="cantidad" value="4">
+                                <button class="btn btn-light btn-sm py-0 px-1" title="Generar turnos"><i class="bi bi-calendar-plus"></i></button>
+                            </form>
+                            {{ boton_eliminar(url_for('horarios.eliminar', horario_id=h.id), '¿Eliminar o desactivar este horario?', 'btn-light btn-sm py-0 px-1', 'bi-trash', '') }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle"></i> Hacé clic en un espacio libre para agregar una clase en ese día y hora.</p>
+{% endif %}
 {% endblock %}

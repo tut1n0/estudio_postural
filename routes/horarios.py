@@ -1,5 +1,7 @@
 """Grilla semanal de horarios."""
 
+from datetime import date
+
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 
 from database import execute, query_one
@@ -56,17 +58,40 @@ def _hay_solapamiento(datos: dict, horario_id: int | None = None) -> bool:
     return bool(query_one(sql, params))
 
 
+def _rango_horario(horarios: list[dict]) -> tuple[int, int]:
+    """Devuelve (hora_inicio, hora_fin) para dibujar el calendario.
+
+    Se calcula a partir de los horarios activos; si no hay, se usa 8–21.
+    """
+    if not horarios:
+        return 8, 21
+    inicio = min(h["hora_inicio"].hour for h in horarios)
+    fin = max(h["hora_fin"].hour + (1 if h["hora_fin"].minute else 0) for h in horarios)
+    fin = max(fin, inicio + 1)
+    return inicio, fin
+
+
 @bp.route("/")
 @login_required
 def grilla():
+    vista = request.args.get("vista", "calendario")
+    if vista not in ("calendario", "lista"):
+        vista = "calendario"
+    horarios = grilla_horarios()
+    inicio_h, fin_h = _rango_horario(horarios)
     return render_template(
         "horarios/grilla.html",
-        grilla=grilla_horarios(),
+        grilla=horarios,
         dias=DIAS,
         dia_semana_nombre=dia_semana_nombre,
         actividades=listar_actividades(incluir_inactivas=False),
         profesores=listar_profesores(incluir_inactivos=False),
         filtro_actividad=request.args.get("actividad", type=int),
+        vista=vista,
+        horas=list(range(inicio_h, fin_h)),
+        rango_inicio_min=inicio_h * 60,
+        rango_total_min=(fin_h - inicio_h) * 60,
+        hoy_dia=date.today().isoweekday(),
     )
 
 
@@ -100,8 +125,12 @@ def nuevo():
                             f"{datos['dia_semana']} {datos['hora_inicio']}")
         flash("Horario creado correctamente.", "success")
         return redirect(url_for("horarios.grilla"))
+    datos = {
+        "dia_semana": request.args.get("dia", type=int),
+        "hora_inicio": request.args.get("hora", ""),
+    }
     return render_template(
-        "horarios/form.html", datos={}, modo="nuevo",
+        "horarios/form.html", datos=datos, modo="nuevo",
         actividades=listar_actividades(incluir_inactivas=False),
         profesores=listar_profesores(incluir_inactivos=False),
         dias=DIAS, dia_semana_nombre=dia_semana_nombre,

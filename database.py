@@ -34,6 +34,9 @@ def get_pool() -> ConnectionPool:
             kwargs={
                 "row_factory": dict_row,
                 "autocommit": False,
+                # El pooler de Supabase (transaction mode) no soporta prepared
+                # statements de psycopg: se desactiva la preparación automática.
+                "prepare_threshold": None,
                 # Opciones de sesión para Supabase/pgbouncer
                 "options": "-c idle_in_transaction_session_timeout=10000",
             },
